@@ -1,11 +1,13 @@
 #!/bin/bash -x 
-echo location= $location
 location="westus"
+echo location= $location
 owner="tecworkshop"
 resourceGroupName=$owner-"fortiweb-"$location
 imageName="fortinet:fortinet_fortiweb-vm_v5:fortinet_fw-vm:latest"
 fortiwebUsername="azureuser"
 fortiwebPassword='Welcome.123456!'
+fortiwebvmdnslabel="$(whoami)fortiwebvm7"
+echo $fortiwebvmdnslabel
 echo fortiwebUsername=$fortiwebUsername
 echo fortiwebPassword=$fortiwebPassword
 
@@ -84,7 +86,7 @@ az network public-ip create \
   --name FWBPublicIP \
   --allocation-method Static \
   --sku Standard \
-  --dns-name fortiwebvm7
+  --dns-name $fortiwebvmdnslabel
 } 
 
 function create_nic() {
@@ -113,7 +115,7 @@ az vm create \
   --admin-password $fortiwebPassword \
   --nics NIC1 NIC2 \
   --location $location \
-  --public-ip-address-dns-name fortiwebvm7 \
+  --public-ip-address-dns-name $fortiwebvmdnslabel \
   --ssh-key-values @~/.ssh/id_rsa.pub
 
 } 
@@ -151,7 +153,7 @@ echo $nodeIp
 
 function check_vm_to_aks_connectivity() {
 echo now check connectivity between fortiweb to aks node ip
-ssh -o "StrictHostKeyChecking=no" azureuser@fortiwebvm7.westus.cloudapp.azure.com execute ping $nodeIp
+ssh -o "StrictHostKeyChecking=no" azureuser@$fortiwebvmdnslabel.westus.cloudapp.azure.com execute ping $nodeIp
 sleep 10
 }
 

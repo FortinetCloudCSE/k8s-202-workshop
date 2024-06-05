@@ -1,6 +1,6 @@
 #!/bin/bash -x 
 location="westus"
-vm_name="fortiwebvm7.$location.cloudapp.azure.com"
+vm_name="$fortiwebvmdnslabel.$location.cloudapp.azure.com"
 echo vm_name=$vm_name
 
 ssh-keygen -f "${HOME}/.ssh/known_hosts" -R "${vm_name}" 
@@ -38,7 +38,7 @@ config system interface
 end
 EOF
 
-ssh -o "StrictHostKeyChecking=no" azureuser@fortiwebvm7.westus.cloudapp.azure.com <userdata.txt 
+ssh -o "StrictHostKeyChecking=no" azureuser@$fortiwebvmdnslabel.westus.cloudapp.azure.com <userdata.txt 
 
 cat << EOF | tee > 05_minimal-ingress.yaml 
 apiVersion: networking.k8s.io/v1

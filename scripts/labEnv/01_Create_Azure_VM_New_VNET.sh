@@ -116,12 +116,6 @@ az network nic update \
     --name NIC2 \
     --ip-forwarding true
 
-# Add an IP alias to NIC2
-#  az network nic ip-config update \
-#    --resource-group $resourceGroupName \
-#    --nic-name NIC2 \
-#    --name ipconfig1 \
-#    --private-ip-address $secondaryIp
 } 
 
 function create_vm() {

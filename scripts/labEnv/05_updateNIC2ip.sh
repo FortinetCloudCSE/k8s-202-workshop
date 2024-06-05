@@ -3,7 +3,7 @@
 # Define variables
 location="westus"
 owner="tecworkshop"
-resourceGroupName="tecworkshop-fortiweb-westus"
+resourceGroupName=$owner-$(whoami)-"fortiweb-"$location-$(date -I)
 secondaryIp="10.0.2.100"
 vmName="MyFortiWebVM"
 nicName1="NIC1"

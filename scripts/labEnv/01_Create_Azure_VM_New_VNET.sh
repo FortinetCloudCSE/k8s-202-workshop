@@ -2,7 +2,8 @@
 location="westus"
 echo location= $location
 owner="tecworkshop"
-resourceGroupName=$owner-"fortiweb-"$location
+resourceGroupName=$owner-$(whoami)-"fortiweb-"$location-$(date -I)
+echo $resourceGroupName
 imageName="fortinet:fortinet_fortiweb-vm_v5:fortinet_fw-vm:latest"
 fortiwebUsername="azureuser"
 fortiwebPassword='Welcome.123456!'

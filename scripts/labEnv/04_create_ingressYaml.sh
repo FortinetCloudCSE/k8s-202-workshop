@@ -42,7 +42,7 @@ EOF
 
 ssh -o "StrictHostKeyChecking=no" azureuser@$fortiwebvmdnslabel.westus.cloudapp.azure.com <userdata.txt 
 
-cat << EOF | tee > 05_minimal-ingress.yaml 
+cat << EOF | tee > 04_minimal-ingress.yaml 
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -75,5 +75,5 @@ spec:
               number: 1241
 EOF
 
-kubectl apply -f 05_minimal-ingress.yaml
+kubectl apply -f 04_minimal-ingress.yaml
 kubectl logs -l app.kubernetes.io/name=fwb-k8s-ctrl -n fortiwebingress

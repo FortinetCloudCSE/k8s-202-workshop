@@ -1,5 +1,7 @@
 # diagram for pod to pod east-west traffic via fortiweb
 
+![diagram](./diagram.png)
+
 ```
 clientpod ->(port2)-fortiwebVM-(vip:10.0.2.100)--vnetpeering--aksworkernode(10.224.0.4:32371)---sisepod(10.224.0.15:9786)
 

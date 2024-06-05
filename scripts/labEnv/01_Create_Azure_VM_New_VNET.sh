@@ -7,6 +7,7 @@ imageName="fortinet:fortinet_fortiweb-vm_v5:fortinet_fw-vm:latest"
 fortiwebUsername="azureuser"
 fortiwebPassword='Welcome.123456!'
 fortiwebvmdnslabel="$(whoami)fortiwebvm7"
+secondaryIp="10.0.2.100"
 echo $fortiwebvmdnslabel
 echo fortiwebUsername=$fortiwebUsername
 echo fortiwebPassword=$fortiwebPassword
@@ -98,13 +99,31 @@ az network nic create \
   --network-security-group MyNSG \
   --public-ip-address FWBPublicIP
 
+az network nic update \
+    --resource-group $resourceGroupName \
+    --name NIC1 \
+    --ip-forwarding true
+
 az network nic create \
   --resource-group $resourceGroupName \
   --name NIC2 \
   --vnet-name $vnetName \
   --subnet InternalSubnet \
   --network-security-group MyNSG
+
+az network nic update \
+    --resource-group $resourceGroupName \
+    --name NIC2 \
+    --ip-forwarding true
+
+# Add an IP alias to NIC2
+#  az network nic ip-config update \
+#    --resource-group $resourceGroupName \
+#    --nic-name NIC2 \
+#    --name ipconfig1 \
+#    --private-ip-address $secondaryIp
 } 
+
 function create_vm() {
 az vm create \
   --resource-group $resourceGroupName \

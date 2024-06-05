@@ -166,8 +166,9 @@ echo $nodeIp
 
 function check_vm_to_aks_connectivity() {
 echo now check connectivity between fortiweb to aks node ip
+sleep 2
 ssh -o "StrictHostKeyChecking=no" azureuser@$fortiwebvmdnslabel.westus.cloudapp.azure.com execute ping $nodeIp
-sleep 10
+sleep 5
 }
 
 function create_secret_for_fortiweb() {

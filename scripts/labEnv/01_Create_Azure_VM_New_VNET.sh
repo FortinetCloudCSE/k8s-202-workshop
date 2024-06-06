@@ -130,12 +130,16 @@ az vm create \
   --nics NIC1 NIC2 \
   --location $location \
   --public-ip-address-dns-name $fortiwebvmdnslabel \
+  --data-disk-sizes-gb 30 \
   --ssh-key-values @~/.ssh/id_rsa.pub
 
 } 
 function create_vnet_peering() {
 localPeeringName="FortiWebToAksPeering"
-remoteResourceGroup="MC"_${owner}-"fortiweb"-${location}_${aksClusterName}_${location}
+#resourceGroupName=$owner-$(whoami)-"fortiweb-"$location-$(date -I)
+echo $resourceGroupName
+remoteResourceGroup="MC"_${resourceGroupName}_${aksClusterName}_${location}
+echo $remoteResourceGroup 
 remotePeeringName="AksToFortiWebPeering"
 # Get the full resource ID of the local VNet
 localVnetId=$(az network vnet show --resource-group $resourceGroupName --name $vnetName --query "id" -o tsv)

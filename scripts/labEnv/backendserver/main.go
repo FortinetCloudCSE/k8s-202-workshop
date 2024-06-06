@@ -20,9 +20,17 @@ type PageData struct {
 
 func main() {
     http.HandleFunc("/generate", generateHandler)
+    http.HandleFunc("/info", infoHandler)
+    http.HandleFunc("/help", helpHandler)
     http.Handle("/", http.FileServer(http.Dir("./static")))
-    fmt.Println("Server started at http://localhost:8888")
-    log.Fatal(http.ListenAndServe(":8888", nil))
+
+    port := os.Getenv("PORT")
+    if port == "" {
+        port = "80"
+    }
+    
+    fmt.Printf("Server started at http://localhost:%s\n", port)
+    log.Fatal(http.ListenAndServe(":" + port, nil))
 }
 
 func generateHandler(w http.ResponseWriter, r *http.Request) {
@@ -79,6 +87,32 @@ func generateHandler(w http.ResponseWriter, r *http.Request) {
     }
     w.Header().Set("Content-Type", "application/json")
     if err := json.NewEncoder(w).Encode(data); err != nil {
+        log.Printf("Error encoding response: %v", err)
+        http.Error(w, "Failed to send response", http.StatusInternalServerError)
+    }
+}
+
+func infoHandler(w http.ResponseWriter, r *http.Request) {
+    info := struct {
+        Version string `json:"version"`
+    }{
+        Version: "0.5.0",
+    }
+    w.Header().Set("Content-Type", "application/json")
+    if err := json.NewEncoder(w).Encode(info); err != nil {
+        log.Printf("Error encoding response: %v", err)
+        http.Error(w, "Failed to send response", http.StatusInternalServerError)
+    }
+}
+
+func helpHandler(w http.ResponseWriter, r *http.Request) {
+    help := struct {
+        Author string `json:"author"`
+    }{
+        Author: "AndyWang",
+    }
+    w.Header().Set("Content-Type", "application/json")
+    if err := json.NewEncoder(w).Encode(help); err != nil {
         log.Printf("Error encoding response: %v", err)
         http.Error(w, "Failed to send response", http.StatusInternalServerError)
     }

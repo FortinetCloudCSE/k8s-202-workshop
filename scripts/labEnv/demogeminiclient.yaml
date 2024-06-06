@@ -1,0 +1,25 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sise
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sise
+  template:
+    metadata:
+      labels:
+        app: sise
+    spec:
+      containers:
+      - name: sise
+        image: interbeing/myfmg:demogeminiclient0.5.0
+        imagePullPolicy: Always
+        env: 
+          - name: PORT
+            value: "9876"
+          - name: GEMINI_API_KEY
+            value: ""
+

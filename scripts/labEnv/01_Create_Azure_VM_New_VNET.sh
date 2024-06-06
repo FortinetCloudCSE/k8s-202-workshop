@@ -19,7 +19,8 @@ aksClusterName=$(whoami)-aks-cluster
 function create_aks_cluster(){
 az group create --location $location --resource-group $resourceGroupName
 
-[ ! -f ~/.ssh/id_rsa ] && ssh-keygen -q -N "" -f ~/.ssh/id_rsa
+rsakeyname="id_rsa_tecworkshop"
+[ ! -f ~/.ssh/$rsakeyname ] && ssh-keygen -t rsa -b 4096 -q -N "" -f ~/.ssh/$rsakeyname
 
 az aks create \
     --name ${aksClusterName} \
@@ -29,7 +30,8 @@ az aks create \
     --service-cidr  10.96.0.0/16 \
     --dns-service-ip 10.96.0.10 \
     --nodepool-name worker \
-    --resource-group $resourceGroupName
+    --resource-group $resourceGroupName \
+    --ssh-key-value ~/.ssh/${rsakeyname}.pub
 az aks get-credentials -g  $resourceGroupName -n ${aksClusterName} --overwrite-existing
 }
 
@@ -131,7 +133,7 @@ az vm create \
   --location $location \
   --public-ip-address-dns-name $fortiwebvmdnslabel \
   --data-disk-sizes-gb 30 \
-  --ssh-key-values @~/.ssh/id_rsa.pub
+  --ssh-key-values @~/.ssh/${rsakeyname}.pub
 
 } 
 function create_vnet_peering() {
@@ -172,7 +174,7 @@ echo $nodeIp
 function check_vm_to_aks_connectivity() {
 echo now check connectivity between fortiweb to aks node ip
 sleep 2
-ssh -o "StrictHostKeyChecking=no" azureuser@$fortiwebvmdnslabel.westus.cloudapp.azure.com execute ping $nodeIp
+ssh -o "StrictHostKeyChecking=no" azureuser@$fortiwebvmdnslabel.westus.cloudapp.azure.com -i ~/.ssh/$rsakeyname execute ping $nodeIp
 sleep 5
 }
 

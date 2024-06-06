@@ -45,6 +45,7 @@ EOF
 
 ssh -o "StrictHostKeyChecking=no" azureuser@$fortiwebvmdnslabel.westus.cloudapp.azure.com <userdata.txt 
 
+if kubectl get svc service1 ; then 
 cat << EOF | tee > 04_minimal-ingress.yaml 
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -79,4 +80,9 @@ spec:
 EOF
 
 kubectl apply -f 04_minimal-ingress.yaml
+kubectl get ingressclass && kubectl get ingress
 kubectl logs -l app.kubernetes.io/name=fwb-k8s-ctrl -n fortiwebingress
+else
+echo PLEASE CREATE BACKEND SERVICE FIRST
+exit 1
+fi

@@ -5,3 +5,4 @@ helm repo add FortiWeb-ingress-controller https://fortinet.github.io/fortiweb-in
 helm repo update
 kubectl create namespace $fortiwebingresscontrollernamespace
 helm install first-release  $releasename --namespace $fortiwebingresscontrollernamespace
+kubectl get pod -n $fortiwebingresscontrollernamespace

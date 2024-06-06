@@ -20,6 +20,9 @@ cat << EOF | tee > userdata.txt
 config system global
   set admin-sport 443
 end
+config log traffic-log
+  set status enable
+end
 config router static
   edit 10
     set dst 10.224.0.0/16

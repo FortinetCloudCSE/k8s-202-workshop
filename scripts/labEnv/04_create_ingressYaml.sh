@@ -5,8 +5,9 @@ echo $fortiwebvmdnslabel
 vm_name="$fortiwebvmdnslabel.$location.cloudapp.azure.com"
 echo vm_name=$vm_name
 
+rsakeyname="id_rsa_tecworkshop"
 ssh-keygen -f "${HOME}/.ssh/known_hosts" -R "${vm_name}" 
-output=$(ssh -o "StrictHostKeyChecking=no" azureuser@$vm_name 'get system interface')
+output=$(ssh -o "StrictHostKeyChecking=no" azureuser@$vm_name -i ~/.ssh/$rsakeyname 'get system interface')
 echo $output
 
 port1ip=$(echo "$output" | grep -A 7 "== \[ port1 \]" | grep "ip:" | awk '{print $2}' | cut -d'/' -f1)
@@ -43,7 +44,7 @@ config system interface
 end
 EOF
 
-ssh -o "StrictHostKeyChecking=no" azureuser@$fortiwebvmdnslabel.westus.cloudapp.azure.com <userdata.txt 
+ssh -o "StrictHostKeyChecking=no" azureuser@$vm_name -i ~/.ssh/$rsakeyname <userdata.txt 
 
 if kubectl get svc service1 ; then 
 cat << EOF | tee > 04_minimal-ingress.yaml 

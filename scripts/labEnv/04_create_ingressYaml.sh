@@ -3,6 +3,9 @@ location="westus"
 fortiwebvmdnslabel="$(whoami)fortiwebvm7"
 echo $fortiwebvmdnslabel
 vm_name="$fortiwebvmdnslabel.$location.cloudapp.azure.com"
+fortiwebvmdnslabelport2="$(whoami)px2.$location.cloudapp.azure.com"
+echo $fortiwebvmdnslabelport2
+
 echo vm_name=$vm_name
 
 rsakeyname="id_rsa_tecworkshop"
@@ -30,6 +33,16 @@ config router static
     set gateway 10.0.1.1
     set device port1
   next
+  edit 100
+    set dst 119.3.33.95/32
+    set gateway 10.0.2.1
+    set device port2
+  next
+  edit 101
+    set dst 34.0.0.0/8
+    set gateway 10.0.2.1
+    set device port2
+  next
 end
 config system interface
   edit "port2"
@@ -51,7 +64,7 @@ cat << EOF | tee > 04_minimal-ingress.yaml
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: minimal-ingress
+  name: m
   annotations: {
     "fortiweb-ip" : $port1ip,    
     "fortiweb-login" : "fwb-login1",  
@@ -68,10 +81,10 @@ metadata:
 spec:
   ingressClassName: fwb-ingress-controller
   rules:
-  - host: test.com
+  - host: $fortiwebvmdnslabelport2
     http:
       paths:
-      - path: /info
+      - path: /generate
         pathType: Prefix
         backend:
           service:

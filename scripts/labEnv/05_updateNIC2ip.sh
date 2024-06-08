@@ -8,19 +8,25 @@ secondaryIp="10.0.2.100"
 vmName="MyFortiWebVM"
 nicName1="NIC1"
 nicName2="NIC2"
+fortiwebvmdnslabel="$(whoami)fortiwebvm7"
+fortiwebvmdnslabelport2="$(whoami)px2"
 
-# Remove NIC2 from the VM
-#az vm nic remove \
-#  --resource-group $resourceGroupName \
-#  --vm-name $vmName \
-#  --nics $nicName2
+
+az network public-ip create \
+  --resource-group $resourceGroupName \
+  --name FWBPublicIPPort2 \
+  --allocation-method Static \
+  --sku Standard \
+  --dns-name $fortiwebvmdnslabelport2
+
 
 # Add a secondary IP configuration to NIC2
 az network nic ip-config create \
   --resource-group $resourceGroupName \
   --nic-name $nicName2 \
   --name ipconfigSecondary \
-  --private-ip-address $secondaryIp
+  --private-ip-address $secondaryIp \
+  --public-ip-address FWBPublicIPPort2
 
 # Attach NIC2 back to the VM
 #az vm nic add \

@@ -84,6 +84,7 @@ az network nsg rule create \
   --destination-port-range '*'
 }
 
+
 function create_public_ip () {
 az network public-ip create \
   --resource-group $resourceGroupName \

@@ -22,4 +22,20 @@ spec:
             value: "9876"
           - name: GEMINI_API_KEY
             value: ""
-
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: service1
+  annotations:
+    health-check-ctrl: HLTHCK_ICMP
+    lb-algo: round-robin
+spec:
+  type: NodePort
+  ports:
+  - port: 1241
+    protocol: TCP
+    targetPort: 9876
+  selector:
+    app: sise
+  sessionAffinity: None

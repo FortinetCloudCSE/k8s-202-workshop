@@ -90,6 +90,6 @@ echo traffic blocked by fortiweb sucessfully
 podegressip=$(az network public-ip list --resource-group $remoteResourceGroup  | jq -r .[0].ipAddress)
 echo $podegressip
 
-
+curl http://$svcdnsname/info 
 curl http://ipx2.westus.cloudapp.azure.com/generate -H "Content-Type: application/json" -d '{"prompt": "your prompt here"}' 
 echo "All checks completed successfully"

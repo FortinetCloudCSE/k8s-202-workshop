@@ -91,6 +91,13 @@ spec:
             name: service1
             port:
               number: 1241
+      - path: /info
+        pathType: Prefix
+        backend:
+          service:
+            name: service2
+            port:
+              number: 1242
 EOF
 
 kubectl apply -f 04_minimal-ingress.yaml

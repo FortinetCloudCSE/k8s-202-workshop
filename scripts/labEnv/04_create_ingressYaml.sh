@@ -7,7 +7,6 @@ fortiwebvmdnslabelport2="$(whoami)px2.$location.cloudapp.azure.com"
 echo $fortiwebvmdnslabelport2
 
 echo vm_name=$vm_name
-
 rsakeyname="id_rsa_tecworkshop"
 ssh-keygen -f "${HOME}/.ssh/known_hosts" -R "${vm_name}" 
 output=$(ssh -o "StrictHostKeyChecking=no" azureuser@$vm_name -i ~/.ssh/$rsakeyname 'get system interface')
@@ -23,37 +22,6 @@ port2ip_first3=$(echo "$port2ip" | cut -d'.' -f1-3)
 cat << EOF | tee > userdata.txt
 config system global
   set admin-sport 443
-end
-config log traffic-log
-  set status enable
-end
-config router static
-  edit 10
-    set dst 10.224.0.0/16
-    set gateway 10.0.1.1
-    set device port1
-  next
-  edit 100
-    set dst 119.3.33.95/32
-    set gateway 10.0.2.1
-    set device port2
-  next
-  edit 101
-    set dst 34.0.0.0/8
-    set gateway 10.0.2.1
-    set device port2
-  next
-end
-config system interface
-  edit "port2"
-    set type physical
-    set allowaccess ping ssh snmp http https FWB-manager 
-    set mode dhcp
-    config  secondaryip
-    end
-    config  classless_static_route
-    end
-  next
 end
 EOF
 

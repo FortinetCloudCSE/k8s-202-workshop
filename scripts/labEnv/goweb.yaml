@@ -1,0 +1,39 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: goweb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: goweb
+  template:
+    metadata:
+      labels:
+        app: goweb
+    spec:
+      containers:
+      - name: goweb
+        image: interbeing/myfmg:demogeminiclient0.5.0
+        imagePullPolicy: Always
+        env: 
+          - name: PORT
+            value: "9876"
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: service2
+  annotations:
+    health-check-ctrl: HLTHCK_ICMP
+    lb-algo: round-robin
+spec:
+  type: NodePort
+  ports:
+  - port: 1242
+    protocol: TCP
+    targetPort: 9876
+  selector:
+    app: goweb
+  sessionAffinity: None

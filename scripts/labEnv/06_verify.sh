@@ -93,3 +93,5 @@ echo $podegressip
 curl http://$svcdnsname/info 
 curl http://ipx2.westus.cloudapp.azure.com/generate -H "Content-Type: application/json" -d '{"prompt": "your prompt here"}' 
 echo "All checks completed successfully"
+echo ssh azureuser@fwbmgmt.westus.cloudapp.azure.com -J root@119.3.33.95 
+

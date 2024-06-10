@@ -1,5 +1,9 @@
 #!/bin/bash -x 
+jumphost="119.3.33.95"
+echo $jumphost is the host which you have SSH access, please modify $jumphost to other host.
 
+
+rsakeyname="id_rsa_tecworkshop"
 location="westus"
 fortiwebvmdnslabel="$(whoami)fortiwebvm7"
 owner="tecworkshop"
@@ -93,5 +97,6 @@ echo $podegressip
 curl http://$svcdnsname/info 
 curl http://ipx2.westus.cloudapp.azure.com/generate -H "Content-Type: application/json" -d '{"prompt": "your prompt here"}' 
 echo "All checks completed successfully"
-echo ssh azureuser@fwbmgmt.westus.cloudapp.azure.com -J root@119.3.33.95 
+ssh-keygen -f "${HOME}/.ssh/known_hosts" -R fwbmgmt.westus.cloudapp.azure.com
+echo ssh -o "StrictHostKeyChecking=no" azureuser@fwbmgmt.westus.cloudapp.azure.com -J root@$jumphost -i ~/.ssh/$rsakeyname 
 

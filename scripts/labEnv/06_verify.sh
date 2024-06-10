@@ -92,7 +92,10 @@ echo traffic blocked by fortiweb sucessfully
 podegressip=$(az network public-ip list --resource-group $remoteResourceGroup  | jq -r .[0].ipAddress)
 echo $podegressip
 
+echo Please beware to access $svcdnsname, you have to use different ip that your client ip. assume you have http proxy configured on http://127.0.0.1:1080
+export http_proxy=http://127.0.0.1:1080
 curl http://$svcdnsname/info 
+curl http://$svcdnsname/generate -H "Content-Type: application/json" -d '{"prompt": "your prompt here"}' 
 curl http://ipx2.westus.cloudapp.azure.com/generate -H "Content-Type: application/json" -d '{"prompt": "your prompt here"}' 
 echo "All checks completed successfully"
 #in case you have lb with public ip point to fortiweb port2 

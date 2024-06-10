@@ -22,10 +22,12 @@ vnetpeering: 10.0.0.0/16 to 10.224.0.0/24
 # deploy
 ```
 ./01_Create_Azure_VM_New_VNET.sh
+./01_5_sshfortiweb.sh
 ./02_install_ingress_controller.sh
 ./03_create_nodeportsvc.sh
 ./04_create_ingressYaml.sh
 ./05_updateNIC2ip.sh
+./05_5_create_azurelb_forport2.sh
 ```
 
 # verify

@@ -1,5 +1,6 @@
 #!/bin/bash -xe
 ./01_Create_Azure_VM_New_VNET.sh && 
+./01_5_sshfortiweb.sh && 
 ./02_install_ingress_controller.sh && 
 ./03_create_nodeportsvc.sh  
 sleep 5

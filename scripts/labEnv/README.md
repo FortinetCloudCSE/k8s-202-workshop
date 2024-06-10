@@ -27,7 +27,6 @@ vnetpeering: 10.0.0.0/16 to 10.224.0.0/24
 ./03_create_nodeportsvc.sh
 ./04_create_ingressYaml.sh
 ./05_updateNIC2ip.sh
-./05_5_create_azurelb_forport2.sh
 ```
 
 # verify

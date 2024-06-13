@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: sise
-        image: interbeing/myfmg:demogeminiclient0.5.0
+        image: interbeing/myfmg:demogeminiclient0.6.1
         imagePullPolicy: Always
         env: 
           - name: PORT

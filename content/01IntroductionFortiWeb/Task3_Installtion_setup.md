@@ -7,7 +7,30 @@ weight: 10
 ### Demo Diagram
 
 ### Prepare Environemnt 
+```bash
+cat << EOF | tee > $HOME/variable.sh
+location="westus"
+owner="tecworkshop"
+resourceGroupName=$owner-$(whoami)-"fortiweb-"$location-$(date -I)
+imageName="fortinet:fortinet_fortiweb-vm_v5:fortinet_fw-vm:latest"
+fortiwebUsername="azureuser"
+fortiwebPassword='Welcome.123456!'
+fortiwebvmdnslabel="$(whoami)fortiwebvm7"
+secondaryIp="10.0.2.100"
+aksClusterName=$(whoami)-aks-cluster
+vm_name="$fortiwebvmdnslabel.$location.cloudapp.azure.com"
+svcdnsname="$(whoami)px2.$location.cloudapp.azure.com"
+remoteResourceGroup="MC"_${resourceGroupName}_${aksClusterName}_${location} 
+fortiwebvmdnslabelport2="$(whoami)px2.$location.cloudapp.azure.com"
+nicName1="NIC1"
+nicName2="NIC2"
+EOF
 
+line='if [ -f "$HOME/variable.sh" ]; then source $HOME/variable.sh ; fi'
+grep -qxF "$line" ~/.bashrc || echo "$line" >> ~/.bashrc
+source $HOME/variable.sh
+
+```
 #### Create Resource Group
 
 ```bash
@@ -317,14 +340,6 @@ ssh -o "StrictHostKeyChecking=no" azureuser@$vm_name  -i  ~/.ssh/$rsakeyname
 
 ### Deploy Fortiweb Ingress Controller
 
-#### Create secret 
-
-the FortiWeb Ingress controller require username and password to access FortiWeb VM, therefore, we need to create a secret for Fortiweb Ingress controller, the secret save username/password in base64 encoded strings which is more secure then plain text. 
-
-```bash
-kubectl create secret generic fwb-login1 --from-literal=username=$fortiwebUsername --from-literal=password=$fortiwebPassword
-```
-
 #### 
 Set Namespace and Release Name Variables: 
 ```bash
@@ -508,7 +523,17 @@ vip=$(echo "$port2ip" | cut -d'.' -f1-3).100
 echo $port1ip
 echo $port2ip
 echo $vip
+
 ```
+
+Create secret for fortiweb API access 
+
+the FortiWeb Ingress controller require username and password to access FortiWeb VM, therefore, we need to create a secret for Fortiweb Ingress controller, the secret save username/password in base64 encoded strings which is more secure then plain text. 
+
+```bash
+kubectl create secret generic fwb-login1 --from-literal=username=$fortiwebUsername --from-literal=password=$fortiwebPassword
+```
+
 Create ingress yaml file
 Ingress Controller will read ingress object, then use the annotations to config Fortiweb use API.
 "fwb-login1" is the secret that keep Fortiweb VM username and password
@@ -595,3 +620,94 @@ ssh -o "StrictHostKeyChecking=no" azureuser@$vm_name -i ~/.ssh/$rsakeyname  show
 ssh -o "StrictHostKeyChecking=no" azureuser@$vm_name -i ~/.ssh/$rsakeyname  show server-policy http-content-routing-policy
 ```
 
+#### Verify ingress rule
+
+Verify the ingress rule created on k8s
+```bash
+kubectl get ingress
+```
+
+Create test pod 
+```bash
+cat << EOF | tee > clientpod.yaml
+iapiVersion: v1
+kind: Pod
+metadata:
+  name: clientpod
+  labels: 
+    app: clientpod
+spec:
+  containers:
+  - name: clientpod
+    image: praqma/network-multitool
+kubectl apply -f clientpod.yaml
+```
+
+Verify nodePort svc
+
+Since fortiweb VM is outside of cluster, fortiweb will use AKS nodePort to reach backend application. therefore the backend application has exposed via NodePort Svc , the client pod shall able to reach backend application via nodePort
+
+```bash
+nodePort=$(kubectl get svc service1 -o jsonpath='{.spec.ports[0].nodePort}')
+kubectl exec -it po/clientpod -- curl -v http://10.224.0.4:$nodePort/info 
+```
+
+you shall expect to see output like 
+```
+
+```
+
+Verify connectivity to Fortiweb VIP
+FortiWeb has VIP configured which it's an alias of NIC2 interface. from client pod, you shall able to ping it.
+
+
+```bash
+kubectl exec -it po/clientpod -- ping -c 5 10.0.2.100
+```
+
+Reach ingress rule via Fortiweb reverse proxy on VIP 
+
+Because Fortiweb has configured with reverseProxy on VIP with ingress rule. client pod shall able to access url via Fortiweb.
+
+We have add "Host: $svcdnsname" in HTTP request Host header, as this is required in the ingress rule definition. 
+the target application is gemini AI client. so we can send request data with your "prompt".
+
+```bash
+kubectl exec -it po/clientpod -- curl -v -H "Host: $svcdnsname" http://10.0.2.100:80/generate  -H "Content-Type: application/json" -d '{"prompt": "hi"}' | grep "HTTP/1.1 200 OK"
+```
+you shall get the response from backend server like this , which indicate you do not have Token for use gemini yet.
+
+```
+
+```
+
+send malicious traffic.
+
+the target backend application is vulumable to SQLi inection. 
+
+### create NIC2 secondary ip and associate with public ip
+
+```bash
+az network public-ip create \
+  --resource-group $resourceGroupName \
+  --name FWBPublicIPPort2 \
+  --allocation-method Static \
+  --sku Standard \
+  --dns-name $fortiwebvmdnslabelport2
+
+
+# Add a secondary IP configuration to NIC2
+az network nic ip-config create \
+  --resource-group $resourceGroupName \
+  --nic-name $nicName2 \
+  --name ipconfigSecondary \
+  --private-ip-address $secondaryIp \
+  --public-ip-address FWBPublicIPPort2
+
+# Verify the secondary IP address
+az network nic show \
+  --resource-group $resourceGroupName \
+  --name $nicName2 \
+  --query "ipConfigurations[].privateIpAddress" \
+  --output table
+```

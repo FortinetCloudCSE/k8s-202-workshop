@@ -21,7 +21,7 @@ aksClusterName=$(whoami)-aks-cluster
 vm_name="$fortiwebvmdnslabel.$location.cloudapp.azure.com"
 svcdnsname="$(whoami)px2.$location.cloudapp.azure.com"
 remoteResourceGroup="MC"_${resourceGroupName}_${aksClusterName}_${location} 
-fortiwebvmdnslabelport2="$(whoami)px2.$location.cloudapp.azure.com"
+fortiwebvmdnslabelport2="$(whoami)px2"
 nicName1="NIC1"
 nicName2="NIC2"
 EOF
@@ -379,7 +379,14 @@ STATUS: deployed
 REVISION: 1
 TEST SUITE: None
 ```
-Check Deployment Status:
+
+Check the manifest that deployed by Helm
+
+```
+helm get manifest first-release -n $fortiwebingresscontrollernamespace 
+```
+
+Check Resource Deployment Status:
 ```bash
 kubectl rollout status deployment first-release-fwb-k8s-ctrl -n fortiwebingress
 ```
@@ -548,7 +555,6 @@ if request url is /generate, the traffic will be redirect to service1
 if request url is /info , the traffic will be redirect to service2
 
 ```bash
-fortiwebvmdnslabelport2="$(whoami)px2.$location.cloudapp.azure.com" 
 cat << EOF | tee > 04_minimal-ingress.yaml 
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -635,7 +641,7 @@ kubectl get ingress
 Create test pod 
 ```bash
 cat << EOF | tee > clientpod.yaml
-iapiVersion: v1
+apiVersion: v1
 kind: Pod
 metadata:
   name: clientpod
@@ -645,6 +651,7 @@ spec:
   containers:
   - name: clientpod
     image: praqma/network-multitool
+EOF
 kubectl apply -f clientpod.yaml
 ```
 
@@ -654,13 +661,40 @@ Since fortiweb VM is outside of cluster, fortiweb will use AKS nodePort to reach
 
 ```bash
 nodePort=$(kubectl get svc service1 -o jsonpath='{.spec.ports[0].nodePort}')
-kubectl exec -it po/clientpod -- curl -v http://10.224.0.4:$nodePort/info 
+kubectl exec -it po/clientpod -- curl  http://10.224.0.4:$nodePort/info 
 ```
 
 you shall expect to see output like 
 ```
-
+{"version":"0.6.0"}
 ```
+
+### create NIC2 secondary ip and associate with public ip
+
+```bash
+az network public-ip create \
+  --resource-group $resourceGroupName \
+  --name FWBPublicIPPort2 \
+  --allocation-method Static \
+  --sku Standard \
+  --dns-name $fortiwebvmdnslabelport2
+
+
+# Add a secondary IP configuration to NIC2
+az network nic ip-config create \
+  --resource-group $resourceGroupName \
+  --nic-name $nicName2 \
+  --name ipconfigSecondary \
+  --private-ip-address $secondaryIp \
+  --public-ip-address FWBPublicIPPort2
+  
+# Verify the secondary IP address
+az network nic show \
+  --resource-group $resourceGroupName \
+  --name $nicName2 \
+  --query "ipConfigurations[].privateIpAddress" \
+  --output table
+``` 
 
 Verify connectivity to Fortiweb VIP
 FortiWeb has VIP configured which it's an alias of NIC2 interface. from client pod, you shall able to ping it.
@@ -690,29 +724,3 @@ send malicious traffic.
 
 the target backend application is vulumable to SQLi inection. 
 
-### create NIC2 secondary ip and associate with public ip
-
-```bash
-az network public-ip create \
-  --resource-group $resourceGroupName \
-  --name FWBPublicIPPort2 \
-  --allocation-method Static \
-  --sku Standard \
-  --dns-name $fortiwebvmdnslabelport2
-
-
-# Add a secondary IP configuration to NIC2
-az network nic ip-config create \
-  --resource-group $resourceGroupName \
-  --nic-name $nicName2 \
-  --name ipconfigSecondary \
-  --private-ip-address $secondaryIp \
-  --public-ip-address FWBPublicIPPort2
-
-# Verify the secondary IP address
-az network nic show \
-  --resource-group $resourceGroupName \
-  --name $nicName2 \
-  --query "ipConfigurations[].privateIpAddress" \
-  --output table
-```

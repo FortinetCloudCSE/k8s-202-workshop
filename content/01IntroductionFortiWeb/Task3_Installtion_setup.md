@@ -4,9 +4,9 @@ menuTitle: "Ch 3: Installation and Setup"
 weight: 10
 ---
 
-### Demo Diagram
-
-### Prepare Environemnt 
+#### Demo Diagram
+<TODO> insert diagram here
+#### Prepare Environemnt Variables
 ```bash
 cat << EOF | tee > $HOME/variable.sh
 location="westus"
@@ -39,15 +39,14 @@ source $HOME/variable.sh
 az group create --name $resourceGroupName --location $location
 ```
 
-check the result with 
+Check creation result with 
 ```bash
 az group show -g $resourceGroupName
 ```
-you shall found "provisioningState": "Succeeded" from output
 
-#### Create AKS clsuter 
+#### Create Kubernetes Cluster
 
-We can use either managed K8s like AKS or self-managed k8s. 
+We can use either managed K8s like AKS, EKS  or self-managed k8s like kubeadm etc.,
 
 ```bash
 [ ! -f ~/.ssh/$rsakeyname ] && ssh-keygen -t rsa -b 4096 -q -N "" -f ~/.ssh/$rsakeyname
@@ -64,16 +63,16 @@ az aks create \
     --ssh-key-value ~/.ssh/${rsakeyname}.pub
 az aks get-credentials -g  $resourceGroupName -n ${aksClusterName} --overwrite-existing
 ```
-verify aks create with 
-
+Check Creation result with 
 ```
 kubectl get node 
 ```
 you shall found node are in "ready" status.
 
 
-#### Create FortiWeb VNET
-In this workshop, We deploy FortiWeb in it's own VNET, FortiWeb will require 
+#### Deploy FortiWeb VM in dedicated VNET 
+
+In this workshop, We are going to deploy FortiWeb VM in it's own VNET, FortiWeb will use two legs deployment model, below lists the components going to be deployed 
 - VNET
 - Subnet1: 10.0.1.0/24
 - Subnet2: 10.0.2.0/24
@@ -82,7 +81,8 @@ In this workshop, We deploy FortiWeb in it's own VNET, FortiWeb will require
 - NIC2 for internal traffic, in Subnet2
 - VM with Extra DISK for log
 
-Create VNET with Subnet1
+**Create VNET with Subnet1**
+
 ```bash
 az network vnet create \
   --resource-group $resourceGroupName \
@@ -91,7 +91,8 @@ az network vnet create \
   --subnet-name ExternalSubnet \
   --subnet-prefix 10.0.1.0/24
 ```
-Create Subnet2
+**Create Subnet2**
+
 ```bash
 az network vnet subnet create \
   --resource-group $resourceGroupName \
@@ -99,9 +100,10 @@ az network vnet subnet create \
   --name InternalSubnet \
   --address-prefix 10.0.2.0/24
 ```
-Create NGS with Rule
 
-```
+**Create NGS with Rule**
+
+```bash
 az network nsg create \
   --resource-group $resourceGroupName \
   --name MyNSG
@@ -118,7 +120,11 @@ az network nsg rule create \
   --destination-address-prefix '*' \
   --destination-port-range '*'
 ```
-Create PublicIP for NIC1
+
+**Create PublicIP with a DNS name**
+
+this publicip server for mgmt purpose, we can use this ip for SSh and WebGUI
+
 ```bash
 az network public-ip create \
   --resource-group $resourceGroupName \
@@ -127,7 +133,8 @@ az network public-ip create \
   --sku Standard \
   --dns-name $fortiwebvmdnslabel
 ```
-Create NIC1 and attach PublicIP
+
+**Create NIC1 and attach PublicIP**
 
 ```bash
 az network nic create \
@@ -145,7 +152,8 @@ az network nic update \
 
 ```
 
-Create NIC2 
+**Create NIC2**
+
 ```bash
 az network nic create \
   --resource-group $resourceGroupName \
@@ -161,9 +169,8 @@ az network nic update \
 ```
 
 #### Deploy FortiWeb VM 
-Create VM
---data-disk-sizes-gb is required, otherwise, Fortiweb will not able to log any traffic.
 
+**Create VM with storage Disk**
 
 ```bash
 az vm create \
@@ -194,34 +201,42 @@ you shall see output like this
   "z
 }
 ```
-Verify Fortiweb VM has been created and you have ssh access to it.
+
+**Verify Fortiweb VM has been created and you have ssh access to it**
+
+type `exit` to exit from SSH session 
 
 ```bash
-ssh -o "StrictHostKeyChecking=no" azureuser@$vm_name -i $HOME/.ssh/$rsakeyname
+ssh -o "StrictHostKeyChecking=no" azureuser@$vm_name -i $HOME/.ssh/$rsakeyname 
 ```
 
 #### Create VNET Peering
-Because AKS and Fortiweb are in different VNET, a VNET Peering is required to make Fortiweb VM able to talk AKS workload. 
 
-define localPeer name and RemotePeer name 
+Because AKS and Fortiweb are in different VNET, we are going to use  VNET Peering to connect Fortiweb VM with AKS workernode. 
+
+**define localPeer name and RemotePeer name **
+
 ```bash
 localPeeringName="FortiWebToAksPeering"
 remotePeeringName="AksToFortiWebPeering"
 ```
 
-Get the full resource ID of the local VNet
+**Get the full resource ID of the local VNet**
+
 ```bash
 localVnetId=$(az network vnet show --resource-group $resourceGroupName --name $vnetName --query "id" -o tsv)
 ```
 
-Get the full resource ID of the remote VNet
+**Get the full resource ID of the remote VNet**
+
 ```bash
 remoteVnetName=$(az network vnet list  --resource-group $remoteResourceGroup --query "[0].name" -o tsv)
 remoteVnetId=$(az network vnet show --resource-group $remoteResourceGroup --name $remoteVnetName --query "id" -o tsv)
 echo "Remote VNet ID: $remoteVnetId"
 ```
 
-Create peering from local VNet to remote VNet
+**Create peering from local VNet to remote VNet**
+
 ```bash
 az network vnet peering create \
   --name $localPeeringName \
@@ -231,7 +246,8 @@ az network vnet peering create \
   --allow-vnet-access
 ```
 
-Create peering from remote VNet to local VNet
+**Create peering from remote VNet to local VNet**
+
 ```bash
 az network vnet peering create \
   --name $remotePeeringName \
@@ -240,22 +256,24 @@ az network vnet peering create \
   --remote-vnet $localVnetId \
   --allow-vnet-access
 ```
-##### Verify the connectivity between Fortiweb VM and AKS 
 
-get AKS worker node ip 
+#### Verify the connectivity between Fortiweb VM and AKS 
 
+**get AKS worker node ip**
 
 ```bash
 nodeIp=$(kubectl get nodes -o jsonpath='{range .items[*]}{.status.addresses[?(@.type=="InternalIP")].address}{"\n"}{end}')
 echo $nodeIp
 
 ```
-ping from Fortiweb VM to AKS node
+**Verify the connectivity between Fortiweb VM and AKS worker node**
+Use ping from Fortiweb VM to AKS node
 
 ```bash
 ssh -o "StrictHostKeyChecking=no" azureuser@$vm_name -i ~/.ssh/$rsakeyname execute ping $nodeIp
 ```
-you shall result like
+you shall see output like 
+
 ```
 MyFortiWebVM # PING 10.224.0.4 (10.224.0.4): 56 data bytes
 64 bytes from 10.224.0.4: icmp_seq=1 ttl=64 time=2.5 ms
@@ -265,16 +283,16 @@ MyFortiWebVM # PING 10.224.0.4 (10.224.0.4): 56 data bytes
 64 bytes from 10.224.0.4: icmp_seq=5 ttl=64 time=15.0 ms
 ```
 
-### Config Fortiweb 
+#### Config Fortiweb VM 
 
 Fortiweb require some basic configuration to work with ingress Controller 
 config list:
 1. enable HTTPS API access on TCP port 443
 2. enable traffic log
 3. config static route
-3.1 static route to AKS vnet subnet via Port1
-3.2 default route to internet via Port2 
-3.3 static route to your client IP (your azure shell) via Port1 
+- static route to AKS vnet subnet via Port1
+- default route to internet via Port2 
+- static route to your client IP (your azure shell) via Port1 
 
 ```bash
 myclientip=$(curl -s https://api.ipify.org)
@@ -313,46 +331,51 @@ end
 EOF
 ssh -o "StrictHostKeyChecking=no" azureuser@$vm_name  -i  ~/.ssh/$rsakeyname < basiconfig.txt
 ```
-Verify the Fortiweb Configuration
+**Verify the Fortiweb Configuration**
 
 you can ssh into Fortiweb to check configuration like static route etc., 
 ```bash
-ssh -o "StrictHostKeyChecking=no" azureuser@$vm_name  -i  ~/.ssh/$rsakeyname 
+ssh -o "StrictHostKeyChecking=no" azureuser@$vm_name  -i  ~/.ssh/$rsakeyname show router static
 ```
 
-### Use Helm to deploy Fortiweb Ingress controller
+#### Use Helm to deploy Fortiweb Ingress controller
 
-#### What is Helm
+**What is Helm**
 
 Helm is a package manager for Kubernetes that simplifies the deployment and management of applications within Kubernetes clusters. It uses charts, which are pre-configured packages of Kubernetes resources. Helm also uses Helm repositories, which are collections of charts that can be shared and accessed by others, facilitating the distribution and collaboration of Kubernetes applications. 
 If you use the Azure Cloud Shell, the Helm CLI (Helm v3.6.3 or later ) is already installed. For installation instructions on your local platform, see Installing Helm https://helm.sh/docs/intro/install/ 
 
 
+#### Deploy Fortiweb Ingress Controller**
 
-### Deploy Fortiweb Ingress Controller
+**prepare namespace and releasename variable**
 
-#### 
-Set Namespace and Release Name Variables: 
 ```bash
 fortiwebingresscontrollernamespace="fortiwebingress"
 releasename="FortiWeb-ingress-controller/fwb-k8s-ctrl"
 ```
-Add Helm Repository for FortiWeb Ingress Controller:
+
+**Add Helm Repository for FortiWeb Ingress Controller**
+
 ```bash
 helm repo add FortiWeb-ingress-controller https://fortinet.github.io/fortiweb-ingress/
 
 ```
-Update Helm Repositories:
+**Update Helm Repositories**
+
 ```bash
 helm repo update
 
 ```
-Create Namespace in Kubernetes:
+
+**Create Namespace in Kubernetes**
+
 ```
 kubectl create namespace $fortiwebingresscontrollernamespace
 
 ```
-Install FortiWeb Ingress Controller using Helm:
+**Install FortiWeb Ingress Controller using Helm**
+
 ```bash
 helm install first-release $releasename --namespace $fortiwebingresscontrollernamespace
 ```
@@ -366,33 +389,36 @@ REVISION: 1
 TEST SUITE: None
 ```
 
-Check the manifest that deployed by Helm
+**Check the manifest that deployed by Helm**
 
 ```
 helm get manifest first-release -n $fortiwebingresscontrollernamespace 
 ```
 
-Check Resource Deployment Status:
+**Check Resource Deployment Status**
 ```bash
 kubectl rollout status deployment first-release-fwb-k8s-ctrl -n fortiwebingress
 ```
-Check Fortiweb Ingress controller startup log
+
+**Check Fortiweb Ingress controller startup log**
 
 ```bash
 k logs -f -l app.kubernetes.io/name=fwb-k8s-ctrl -n $fortiwebingresscontrollernamespace
 ```
-you shall see 
+you are expected to see output like 
+
 ```
 Stopping fortiweb ingress controller
 Starting fortiweb ingress controller
 time="2024-06-11T03:19:34Z" level=info msg="==Starting FortiWEB Ingress controller"
 ```
 
-### Create backend demo service1 and service2
+### Deploy Backend Application in AKS 
+We will deploy two service and expose with ClusterIP SVC , service1 and service2
 
-deploy backend application and expose with clusterIP svc service1
+**deploy service1**
 ```bash
-cat << EOF | tee > demogeminiclient.yaml
+cat << EOF | tee > service1.yaml
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -436,23 +462,12 @@ spec:
   sessionAffinity: None
 
 EOF
-kubectl apply -f demogeminiclient.yaml
+kubectl apply -f service1.yaml
 kubectl rollout status deployment sise
 ```
-Verify the backend service with 
+**deploy service2**
 ```bash
-kubectl get ep service1
-```
-you shall see output like
-```
-NAME       ENDPOINTS          AGE
-service1   10.224.0.21:9876   67s
-```
-
-
-deploy another backend application and expose with clusterIP svc service2
-```bash
-cat << EOF | tee > goweb.yaml
+cat << EOF | tee > service2.yaml
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -493,22 +508,26 @@ spec:
     app: goweb
   sessionAffinity: None
 EOF
-kubectl apply -f goweb.yaml
+kubectl apply -f service2.yaml
 kubectl rollout status deployment goweb
 ```
-Verify service with 
+**Verify service**
 ```bash
+kubectl get ep service1
 kubectl get ep service2
 ```
 you shall see output like 
 
 ```
 NAME       ENDPOINTS          AGE
+service1   10.224.0.22:9876   8s
 service2   10.224.0.23:9876   8s
 ```
 
-### Create minimal-ingress yaml file 
+####  Create ingress rule with yaml file 
 
+
+Fortiweb ingress controller is the default ingress controller, it will read and parse the ingress rule. the ingress controller will also read annotation from yaml file for some configuration parameters like fortiweb login ip and secrets etc., 
 We will tell fortiweb ingress controller use fortiweb port1 ip for API access, and create VIP on Fortiweb Port2, the VIP address is on same subnet with Port2 with last octet set to .100.
 
 use below script to get Fortiweb Port1 and Port2 IP address , then create yaml file with these IP address
@@ -524,7 +543,7 @@ echo $vip
 
 ```
 
-Create secret for fortiweb API access 
+**Create secret for fortiweb API access**
 
 the FortiWeb Ingress controller require username and password to access FortiWeb VM, therefore, we need to create a secret for Fortiweb Ingress controller, the secret save username/password in base64 encoded strings which is more secure then plain text. 
 
@@ -532,7 +551,8 @@ the FortiWeb Ingress controller require username and password to access FortiWeb
 kubectl create secret generic fwb-login1 --from-literal=username=$fortiwebUsername --from-literal=password=$fortiwebPassword
 ```
 
-Create ingress yaml file
+**Create ingress yaml file**
+
 Ingress Controller will read ingress object, then use the annotations to config Fortiweb use API.
 "fwb-login1" is the secret that keep Fortiweb VM username and password
 "virtual-server-ip" is the VIP to be configured on FortiWeb 

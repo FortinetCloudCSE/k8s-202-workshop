@@ -11,7 +11,7 @@ weight: 10
 cat << EOF | tee > $HOME/variable.sh
 location="westus"
 owner="tecworkshop"
-resourceGroupName=$owner-$(whoami)-"fortiweb-"$location-$(date -I)
+resourceGroupName=$owner-$(whoami)-"fortiweb-"$location-$(date +%Y-%m)
 imageName="fortinet:fortinet_fortiweb-vm_v5:fortinet_fw-vm:latest"
 fortiwebUsername="azureuser"
 fortiwebPassword='Welcome.123456!'

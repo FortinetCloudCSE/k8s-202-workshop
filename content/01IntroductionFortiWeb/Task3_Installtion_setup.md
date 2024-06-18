@@ -703,3 +703,10 @@ kubectl exec -it po/clientpod -- curl -v -H "Host: $svcdnsname" http://10.0.2.10
 you shall get the response from backend server like this , which indicate you do not have Token for use gemini yet.
 
 ```
+Access ingress service via external public ip or dns name
+
+```bash
+k exec -it po/clientpod -- curl http://$svcdnsname/info 
+```
+
+

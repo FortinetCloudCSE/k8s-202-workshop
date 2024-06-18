@@ -11,6 +11,7 @@ weight: 10
 cat << EOF | tee > $HOME/variable.sh
 location="westus"
 owner="tecworkshop"
+vnetName="FortiWeb-VNET"
 resourceGroupName=$owner-$(whoami)-"fortiweb-"$location-$(date +%Y-%m)
 imageName="fortinet:fortinet_fortiweb-vm_v5:fortinet_fw-vm:latest"
 fortiwebUsername="azureuser"
@@ -18,6 +19,7 @@ fortiwebPassword='Welcome.123456!'
 fortiwebvmdnslabel="$(whoami)fortiwebvm7"
 secondaryIp="10.0.2.100"
 aksClusterName=$(whoami)-aks-cluster
+rsakeyname="id_rsa_tecworkshop"
 vm_name="$fortiwebvmdnslabel.$location.cloudapp.azure.com"
 svcdnsname="$(whoami)px2.$location.cloudapp.azure.com"
 remoteResourceGroup="MC"_${resourceGroupName}_${aksClusterName}_${location} 
@@ -34,10 +36,6 @@ source $HOME/variable.sh
 #### Create Resource Group
 
 ```bash
-location="westus"
-owner="tecworkshop"
-resourceGroupName=$owner-$(whoami)-"fortiweb-"$location-$(date +%Y-%m
-)
 az group create --name $resourceGroupName --location $location
 ```
 
@@ -52,8 +50,6 @@ you shall found "provisioningState": "Succeeded" from output
 We can use either managed K8s like AKS or self-managed k8s. 
 
 ```bash
-rsakeyname="id_rsa_tecworkshop"
-aksClusterName=$(whoami)-aks-cluster
 [ ! -f ~/.ssh/$rsakeyname ] && ssh-keygen -t rsa -b 4096 -q -N "" -f ~/.ssh/$rsakeyname
 
 az aks create \
@@ -88,7 +84,6 @@ In this workshop, We deploy FortiWeb in it's own VNET, FortiWeb will require
 
 Create VNET with Subnet1
 ```bash
-vnetName="FortiWeb-VNET"
 az network vnet create \
   --resource-group $resourceGroupName \
   --name $vnetName \
@@ -125,7 +120,6 @@ az network nsg rule create \
 ```
 Create PublicIP for NIC1
 ```bash
-fortiwebvmdnslabel="$(whoami)fortiwebvm7"
 az network public-ip create \
   --resource-group $resourceGroupName \
   --name FWBPublicIP \
@@ -172,9 +166,6 @@ Create VM
 
 
 ```bash
-imageName="fortinet:fortinet_fortiweb-vm_v5:fortinet_fw-vm:latest"
-fortiwebUsername="azureuser"
-fortiwebPassword='Welcome.123456!'
 az vm create \
   --resource-group $resourceGroupName \
   --name MyFortiWebVM \
@@ -206,7 +197,7 @@ you shall see output like this
 Verify Fortiweb VM has been created and you have ssh access to it.
 
 ```bash
-ssh -o "StrictHostKeyChecking=no" azureuser@$(whoami)fortiwebvm7.westus.cloudapp.azure.com -i $HOME/.ssh/id_rsa_tecworkshop
+ssh -o "StrictHostKeyChecking=no" azureuser@$vm_name -i $HOME/.ssh/$rsakeyname
 ```
 
 #### Create VNET Peering
@@ -216,7 +207,6 @@ define localPeer name and RemotePeer name
 ```bash
 localPeeringName="FortiWebToAksPeering"
 remotePeeringName="AksToFortiWebPeering"
-remoteResourceGroup="MC"_${resourceGroupName}_${aksClusterName}_${location}
 ```
 
 Get the full resource ID of the local VNet
@@ -263,7 +253,7 @@ echo $nodeIp
 ping from Fortiweb VM to AKS node
 
 ```bash
-ssh -o "StrictHostKeyChecking=no" azureuser@$fortiwebvmdnslabel.westus.cloudapp.azure.com -i ~/.ssh/$rsakeyname execute ping $nodeIp
+ssh -o "StrictHostKeyChecking=no" azureuser@$vm_name -i ~/.ssh/$rsakeyname execute ping $nodeIp
 ```
 you shall result like
 ```
@@ -287,10 +277,6 @@ config list:
 3.3 static route to your client IP (your azure shell) via Port1 
 
 ```bash
-location="westus"
-fortiwebvmdnslabel="$(whoami)fortiwebvm7"
-vm_name="$fortiwebvmdnslabel.$location.cloudapp.azure.com"
-rsakeyname="id_rsa_tecworkshop"
 myclientip=$(curl -s https://api.ipify.org)
 echo $myclientip
 cat << EOF | tee > basiconfig.txt
@@ -717,10 +703,3 @@ kubectl exec -it po/clientpod -- curl -v -H "Host: $svcdnsname" http://10.0.2.10
 you shall get the response from backend server like this , which indicate you do not have Token for use gemini yet.
 
 ```
-
-```
-
-send malicious traffic.
-
-the target backend application is vulumable to SQLi inection. 
-

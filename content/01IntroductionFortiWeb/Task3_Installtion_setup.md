@@ -338,6 +338,11 @@ ssh -o "StrictHostKeyChecking=no" azureuser@$vm_name  -i  ~/.ssh/$rsakeyname
 
 #### What is Helm
 
+Helm is a package manager for Kubernetes that simplifies the deployment and management of applications within Kubernetes clusters. It uses charts, which are pre-configured packages of Kubernetes resources. Helm also uses Helm repositories, which are collections of charts that can be shared and accessed by others, facilitating the distribution and collaboration of Kubernetes applications. 
+If you use the Azure Cloud Shell, the Helm CLI (Helm v3.6.3 or later ) is already installed. For installation instructions on your local platform, see Installing Helm https://helm.sh/docs/intro/install/ 
+
+
+
 ### Deploy Fortiweb Ingress Controller
 
 #### 

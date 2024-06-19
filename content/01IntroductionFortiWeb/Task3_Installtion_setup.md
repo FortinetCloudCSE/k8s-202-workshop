@@ -4,9 +4,22 @@ menuTitle: "Ch 3: Installation and Setup"
 weight: 10
 ---
 
-#### Demo Diagram
-<TODO> insert diagram here
+#### Network Diagram
+In this chapter, we are going to create a lab setup as illustrated in the network diagram below.
+
+Fortiweb can be configured with two ports: port1 for incoming traffic and port2 for proxy traffic to the backend application. This is called the two-legs mode.
+
+**Fortiweb Two-Legs Mode**
+![Fortiweb with two ports](../images/fortiwebtwolegs.png)
+
+Fortiweb can also be configured with a single port, where port1 handles both incoming traffic and proxy traffic to the backend application. This is called the one-arm mode.
+
+**Fortiweb One-Arm Mode**
+![Fortiweb with single port](../images/fortiwebonearm.png)
+
+
 #### Prepare Environemnt Variables
+
 ```bash
 read -p "Enter deploy mode (twolegs/onearm) [twolegs]: " fortiwebdeploymode
 fortiwebdeploymode=${fortiwebdeploymode:-twolegs}

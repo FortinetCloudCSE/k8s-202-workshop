@@ -8,8 +8,9 @@ weight: 10
 <TODO> insert diagram here
 #### Prepare Environemnt Variables
 ```bash
-fortiwebdeploymode="twolegs"
-# Set secondaryIp based on fortiwebdeploymode
+read -p "Enter deploy mode (twolegs/onearm) [twolegs]: " fortiwebdeploymode
+fortiwebdeploymode=${fortiwebdeploymode:-twolegs}
+echo $fortiwebdeploymode 
 if [ "$fortiwebdeploymode" == "twolegs" ]; then
     secondaryIp="10.0.2.100"
 else

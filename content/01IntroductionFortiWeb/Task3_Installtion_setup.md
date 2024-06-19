@@ -8,30 +8,43 @@ weight: 10
 <TODO> insert diagram here
 #### Prepare Environemnt Variables
 ```bash
-cat << EOF | tee > $HOME/variable.sh
+fortiwebdeploymode="twolegs"
+# Set secondaryIp based on fortiwebdeploymode
+if [ "$fortiwebdeploymode" == "twolegs" ]; then
+    secondaryIp="10.0.2.100"
+else
+    secondaryIp="10.0.1.100"
+fi
 location="westus"
 owner="tecworkshop"
-vnetName="FortiWeb-VNET"
 resourceGroupName=$owner-$(whoami)-"fortiweb-"$location-$(date +%Y-%m)
+
+cat << EOF | tee > $HOME/variable.sh
+#!/bin/bash -x
+vnetName="FortiWeb-VNET"
 imageName="fortinet:fortinet_fortiweb-vm_v5:fortinet_fw-vm:latest"
 fortiwebUsername="azureuser"
 fortiwebPassword='Welcome.123456!'
 fortiwebvmdnslabel="$(whoami)fortiwebvm7"
-secondaryIp="10.0.2.100"
 aksClusterName=$(whoami)-aks-cluster
 rsakeyname="id_rsa_tecworkshop"
-vm_name="${fortiwebvmdnslabel}.${location}.cloudapp.azure.com"
-svcdnsname="$(whoami)px2.$location.cloudapp.azure.com"
-remoteResourceGroup="MC"_${resourceGroupName}_${aksClusterName}_${location} 
+vm_name="$(whoami)fortiwebvm7.${location}.cloudapp.azure.com"
+svcdnsname="$(whoami)px2.${location}.cloudapp.azure.com"
+remoteResourceGroup="MC"_${resourceGroupName}_$(whoami)-aks-cluster_${location} 
 fortiwebvmdnslabelport2="$(whoami)px2"
 nicName1="NIC1"
 nicName2="NIC2"
 EOF
-
+echo fortiwebdeploymode=$fortiwebdeploymode >> $HOME/variable.sh
+echo secondaryIp=$secondaryIp >> $HOME/variable.sh
+echo location=$location >> $HOME/variable.sh
+echo owner=$owner >> $HOME/variable.sh
+echo resourceGroupName=$resourceGroupName >> $HOME/variable.sh
+chmod +x $HOME/variable.sh
 line='if [ -f "$HOME/variable.sh" ]; then source $HOME/variable.sh ; fi'
 grep -qxF "$line" ~/.bashrc || echo "$line" >> ~/.bashrc
 source $HOME/variable.sh
-
+$HOME/variable.sh
 ```
 #### Create Resource Group
 
@@ -67,7 +80,8 @@ Check Creation result with
 ```
 kubectl get node 
 ```
-you shall found node are in "ready" status.
+you shall found node are in "ready" status and "VERSION" is v.1.28.9
+
 
 
 #### Deploy FortiWeb VM in dedicated VNET 
@@ -75,10 +89,10 @@ you shall found node are in "ready" status.
 In this workshop, We are going to deploy FortiWeb VM in it's own VNET, FortiWeb will use two legs deployment model, below lists the components going to be deployed 
 - VNET
 - Subnet1: 10.0.1.0/24
-- Subnet2: 10.0.2.0/24
+- Subnet2: 10.0.2.0/24 when fortiweb in two legs mode
 - NSG : allow all traffic 
 - NIC1 with Public IP for SSH access and Management, in Subnet1
-- NIC2 for internal traffic, in Subnet2
+- NIC2 for internal traffic, in Subnet2, when fortiweb in two legs mode
 - VM with Extra DISK for log
 
 **Create VNET with Subnet1**
@@ -94,11 +108,13 @@ az network vnet create \
 **Create Subnet2**
 
 ```bash
+if [ "$fortiwebdeploymode" == "twolegs" ]; then 
 az network vnet subnet create \
   --resource-group $resourceGroupName \
   --vnet-name $vnetName \
   --name InternalSubnet \
   --address-prefix 10.0.2.0/24
+fi
 ```
 
 **Create NGS with Rule**
@@ -155,6 +171,7 @@ az network nic update \
 **Create NIC2**
 
 ```bash
+if [ "$fortiwebdeploymode" == "twolegs" ]; then 
 az network nic create \
   --resource-group $resourceGroupName \
   --name NIC2 \
@@ -166,6 +183,7 @@ az network nic update \
     --resource-group $resourceGroupName \
     --name NIC2 \
     --ip-forwarding true
+fi 
 ```
 
 #### Deploy FortiWeb VM 
@@ -173,6 +191,12 @@ az network nic update \
 **Create VM with storage Disk**
 
 ```bash
+if [ "$fortiwebdeploymode" == "twolegs" ]; then 
+nics="NIC1 NIC2" 
+else
+nics="NIC1"
+fi
+
 az vm create \
   --resource-group $resourceGroupName \
   --name MyFortiWebVM \
@@ -180,13 +204,13 @@ az vm create \
   --image $imageName \
   --admin-username $fortiwebUsername \
   --admin-password $fortiwebPassword \
-  --nics NIC1 NIC2 \
+  --nics $nics \
   --location $location \
   --public-ip-address-dns-name $fortiwebvmdnslabel \
   --data-disk-sizes-gb 30 \
   --ssh-key-values @~/.ssh/${rsakeyname}.pub
 ```
-you shall see output like this 
+you shall see output like this  if fortiweb in twolegs mode
 
 ```
 {
@@ -208,6 +232,10 @@ type `exit` to exit from SSH session
 
 ```bash
 ssh -o "StrictHostKeyChecking=no" azureuser@$vm_name -i $HOME/.ssh/$rsakeyname 
+```
+or directly append Fortiweb cli command 
+```bash
+ssh -o "StrictHostKeyChecking=no" azureuser@$vm_name -i $HOME/.ssh/$rsakeyname "get system status"
 ```
 
 #### Create VNET Peering
@@ -291,7 +319,7 @@ config list:
 2. enable traffic log
 3. config static route
 - static route to AKS vnet subnet via Port1
-- default route to internet via Port2 
+- default route to internet via Port2 when use fortiweb in twolegs mode
 - static route to your client IP (your azure shell) via Port1 
 
 ```bash
@@ -403,7 +431,7 @@ kubectl rollout status deployment first-release-fwb-k8s-ctrl -n fortiwebingress
 **Check Fortiweb Ingress controller startup log**
 
 ```bash
-k logs -f -l app.kubernetes.io/name=fwb-k8s-ctrl -n $fortiwebingresscontrollernamespace
+k logs -n 50 -l app.kubernetes.io/name=fwb-k8s-ctrl -n $fortiwebingresscontrollernamespace
 ```
 you are expected to see output like 
 
@@ -520,8 +548,9 @@ you shall see output like
 
 ```
 NAME       ENDPOINTS          AGE
-service1   10.224.0.22:9876   8s
-service2   10.224.0.23:9876   8s
+service1   10.224.0.22:9876   14s
+NAME       ENDPOINTS          AGE
+service2   10.224.0.19:9876   6s
 ```
 
 ####  Create ingress rule with yaml file 
@@ -535,11 +564,15 @@ use below script to get Fortiweb Port1 and Port2 IP address , then create yaml f
 ```bash
 output=$(ssh -o "StrictHostKeyChecking=no" azureuser@$vm_name -i ~/.ssh/$rsakeyname 'get system interface')
 port1ip=$(echo "$output" | grep -A 7 "== \[ port1 \]" | grep "ip:" | awk '{print $2}' | cut -d'/' -f1)
+if [ "$fortiwebdeploymode" == "twolegs" ]; then
 port2ip=$(echo "$output" | grep -A 7 "== \[ port2 \]" | grep "ip:" | awk '{print $2}' | cut -d'/' -f1)
+echo port2ip=$port2ip
 vip=$(echo "$port2ip" | cut -d'.' -f1-3).100
-echo $port1ip
-echo $port2ip
-echo $vip
+else 
+vip=$(echo "$port1ip" | cut -d'.' -f1-3).100
+fi
+echo port1ip=$port1ip
+echo vip=$vip
 
 ```
 
@@ -561,6 +594,11 @@ if request url is /generate, the traffic will be redirect to service1
 if request url is /info , the traffic will be redirect to service2
 
 ```bash
+if [ "$fortiwebdeploymode" == "twolegs" ]; then
+vipport="port2"
+else
+vipport="port1"
+fi
 cat << EOF | tee > 04_minimal-ingress.yaml 
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -572,7 +610,7 @@ metadata:
     "fortiweb-ctrl-log" : "enable",
     "virtual-server-ip" : $vip,
     "virtual-server-addr-type" : "ipv4",
-    "virtual-server-interface" : "port2",
+    "virtual-server-interface" :$vipport, 
     "server-policy-web-protection-profile" : "Inline Standard Protection",
     "server-policy-https-service" : "HTTPS",
     "server-policy-http-service" : "HTTP",
@@ -678,6 +716,11 @@ you shall expect to see output like
 ### create NIC2 secondary ip and associate with public ip
 
 ```bash
+if [ "$fortiwebdeploymode" == "twolegs" ]; then
+vipnicname="NIC2"
+else        
+vipnicname="NIC1"  
+fi  
 az network public-ip create \
   --resource-group $resourceGroupName \
   --name FWBPublicIPPort2 \
@@ -689,25 +732,34 @@ az network public-ip create \
 # Add a secondary IP configuration to NIC2
 az network nic ip-config create \
   --resource-group $resourceGroupName \
-  --nic-name $nicName2 \
+  --nic-name $vipnicname \
   --name ipconfigSecondary \
   --private-ip-address $secondaryIp \
   --public-ip-address FWBPublicIPPort2
-  
-# Verify the secondary IP address
+```  
+
+**Verify the secondary IP address**
+```bash
 az network nic show \
   --resource-group $resourceGroupName \
-  --name $nicName2 \
-  --query "ipConfigurations[].privateIpAddress" \
+  --name $vipnicname \
+  --query "ipConfigurations[]" \
   --output table
 ``` 
+you shall see output like 
+```
+Name               Primary    PrivateIPAddress    PrivateIPAddressVersion    PrivateIPAllocationMethod    ProvisioningState    ResourceGroup
+-----------------  ---------  ------------------  -------------------------  ---------------------------  -------------------  ----------------------------------------
+ipconfig1          True       10.0.2.4            IPv4                       Dynamic                      Succeeded            tecworkshop-andy-fortiweb-westus-2024-06
+ipconfigSecondary  False      10.0.2.100          IPv4                       Static                       Succeeded            tecworkshop-andy-fortiweb-westus-2024-06
+```
 
 Verify connectivity to Fortiweb VIP
 FortiWeb has VIP configured which it's an alias of NIC2 interface. from client pod, you shall able to ping it.
 
 
 ```bash
-kubectl exec -it po/clientpod -- ping -c 5 10.0.2.100
+kubectl exec -it po/clientpod -- ping -c 5 $secondaryIp
 ```
 
 Reach ingress rule via Fortiweb reverse proxy on VIP 
@@ -718,15 +770,12 @@ We have add "Host: $svcdnsname" in HTTP request Host header, as this is required
 the target application is gemini AI client. so we can send request data with your "prompt".
 
 ```bash
-kubectl exec -it po/clientpod -- curl -v -H "Host: $svcdnsname" http://10.0.2.100:80/generate  -H "Content-Type: application/json" -d '{"prompt": "hi"}' | grep "HTTP/1.1 200 OK"
+kubectl exec -it po/clientpod -- curl -v -H "Host: $svcdnsname" http://$secondaryIp:80/generate  -H "Content-Type: application/json" -d '{"prompt": "hi"}' | grep "HTTP/1.1 200 OK"
 ```
 you shall get the response from backend server like this , which indicate you do not have Token for use gemini yet.
 
-```
 Access ingress service via external public ip or dns name
 
 ```bash
 k exec -it po/clientpod -- curl http://$svcdnsname/info 
 ```
-
-

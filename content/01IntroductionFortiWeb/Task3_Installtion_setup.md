@@ -29,9 +29,15 @@ if [ "$fortiwebdeploymode" == "twolegs" ]; then
 else
     secondaryIp="10.0.1.100"
 fi
-location="westus"
 owner="tecworkshop"
-resourceGroupName=$owner-$(whoami)-"fortiweb-"$location-$(date +%Y-%m)
+currentUser=$(az account show --query user.name -o tsv)
+resourceGroupName=$(az group list --query "[?tags.UserPrincipalName=='$currentUser'].name" -o tsv)
+if [ -z "$resourceGroupName" ]; then
+    az group create --name $resourceGroupName --tags UserPrincipalName=$currentUser
+    resourceGroupName=$resourceGroupName
+fi
+location=$(az group show --name $resourceGroupName --query location -o tsv)
+echo "Using resource group $resourceGroupName in location $location"
 
 cat << EOF | tee > $HOME/variable.sh
 #!/bin/bash -x
@@ -59,16 +65,7 @@ line='if [ -f "$HOME/variable.sh" ]; then source $HOME/variable.sh ; fi'
 grep -qxF "$line" ~/.bashrc || echo "$line" >> ~/.bashrc
 source $HOME/variable.sh
 $HOME/variable.sh
-```
-#### Create Resource Group
-
-```bash
-az group create --name $resourceGroupName --location $location
-```
-
-Check creation result with 
-```bash
-az group show -g $resourceGroupName
+grep -qxF "$vm_name" "$HOME/.ssh/known_hosts"  && ssh-keygen -R "$vm_name"
 ```
 
 #### Create Kubernetes Cluster
@@ -83,6 +80,7 @@ az aks create \
     --node-count 1 \
     --vm-set-type VirtualMachineScaleSets \
     --network-plugin azure \
+    --location $location \
     --service-cidr  10.96.0.0/16 \
     --dns-service-ip 10.96.0.10 \
     --nodepool-name worker \
@@ -115,6 +113,7 @@ In this workshop, We are going to deploy FortiWeb VM in it's own VNET, FortiWeb 
 az network vnet create \
   --resource-group $resourceGroupName \
   --name $vnetName \
+  --location $location \
   --address-prefix 10.0.0.0/16 \
   --subnet-name ExternalSubnet \
   --subnet-prefix 10.0.1.0/24
@@ -127,6 +126,7 @@ az network vnet subnet create \
   --resource-group $resourceGroupName \
   --vnet-name $vnetName \
   --name InternalSubnet \
+  --location $location \
   --address-prefix 10.0.2.0/24
 fi
 ```
@@ -136,6 +136,7 @@ fi
 ```bash
 az network nsg create \
   --resource-group $resourceGroupName \
+  --location $location \
   --name MyNSG
 
 az network nsg rule create \
@@ -158,6 +159,7 @@ this publicip server for mgmt purpose, we can use this ip for SSh and WebGUI
 ```bash
 az network public-ip create \
   --resource-group $resourceGroupName \
+  --location $location \
   --name FWBPublicIP \
   --allocation-method Static \
   --sku Standard \
@@ -169,6 +171,7 @@ az network public-ip create \
 ```bash
 az network nic create \
   --resource-group $resourceGroupName \
+  --location $location \
   --name NIC1 \
   --vnet-name $vnetName \
   --subnet ExternalSubnet \
@@ -188,6 +191,7 @@ az network nic update \
 if [ "$fortiwebdeploymode" == "twolegs" ]; then 
 az network nic create \
   --resource-group $resourceGroupName \
+  --location $location \
   --name NIC2 \
   --vnet-name $vnetName \
   --subnet InternalSubnet \
@@ -240,16 +244,38 @@ you shall see output like this  if fortiweb in twolegs mode
 }
 ```
 
+**Check all the resource you created**
+
+```bash
+az resource list -g $resourceGroupName -o table
+```
+
+you shall see output like 
+
+```
+Name                                                    ResourceGroup                             Location    Type                                        Status
+------------------------------------------------------  ----------------------------------------  ----------  ------------------------------------------  --------
+andy-aks-cluster                                        tecworkshop-andy-fortiweb-westus-2024-06  westus      Microsoft.ContainerService/managedClusters
+FortiWeb-VNET                                           tecworkshop-andy-fortiweb-westus-2024-06  westus      Microsoft.Network/virtualNetworks
+MyNSG                                                   tecworkshop-andy-fortiweb-westus-2024-06  westus      Microsoft.Network/networkSecurityGroups
+FWBPublicIP                                             tecworkshop-andy-fortiweb-westus-2024-06  westus      Microsoft.Network/publicIPAddresses
+NIC1                                                    tecworkshop-andy-fortiweb-westus-2024-06  westus      Microsoft.Network/networkInterfaces
+NIC2                                                    tecworkshop-andy-fortiweb-westus-2024-06  westus      Microsoft.Network/networkInterfaces
+MyFortiWebVM                                            tecworkshop-andy-fortiweb-westus-2024-06  westus      Microsoft.Compute/virtualMachines
+MyFortiWebVM_OsDisk_1_9b07ceae4f42400988aa71258ce78147  TECWORKSHOP-ANDY-FORTIWEB-WESTUS-2024-06  westus      Microsoft.Compute/disks
+MyFortiWebVM_disk2_58a0b1cd051646f19d5832babf9ec56c     TECWORKSHOP-ANDY-FORTIWEB-WESTUS-2024-06  westus      Microsoft.Compute/disks
+```
+
 **Verify Fortiweb VM has been created and you have ssh access to it**
 
 type `exit` to exit from SSH session 
 
 ```bash
-ssh -o "StrictHostKeyChecking=no" azureuser@$vm_name -i $HOME/.ssh/$rsakeyname 
+ssh-keygen -R $vm_name && ssh -o "StrictHostKeyChecking=no" azureuser@$vm_name -i $HOME/.ssh/$rsakeyname 
 ```
 or directly append Fortiweb cli command 
 ```bash
-ssh -o "StrictHostKeyChecking=no" azureuser@$vm_name -i $HOME/.ssh/$rsakeyname "get system status"
+ssh-keygen -R $vm_name && ssh -o "StrictHostKeyChecking=no" azureuser@$vm_name -i $HOME/.ssh/$rsakeyname "get system status"
 ```
 
 #### Create VNET Peering
@@ -338,7 +364,8 @@ config list:
 
 ```bash
 myclientip=$(curl -s https://api.ipify.org)
-echo $myclientip
+echo $myclientip 
+
 cat << EOF | tee > basiconfig.txt
 config system global
   set admin-sport 443
@@ -346,6 +373,8 @@ end
 config log traffic-log
   set status enable
 end
+EOF
+cat << EOF | tee > interfaceport2config.txt
 config system interface
   edit "port2"
     set type physical
@@ -353,6 +382,9 @@ config system interface
     set mode dhcp
   next
 end
+EOF
+
+cat << EOF | tee > staticrouteconfigtwolegs.txt
 config router static
   edit 10
     set dst 10.224.0.0/16
@@ -371,7 +403,25 @@ config router static
   next
 end
 EOF
+
+cat << EOF | tee > staticrouteconfigonearm.txt
+config router static
+  edit 10
+    set dst 10.224.0.0/16
+    set gateway 10.0.1.1
+    set device port1
+  next
+EOF
+
 ssh -o "StrictHostKeyChecking=no" azureuser@$vm_name  -i  ~/.ssh/$rsakeyname < basiconfig.txt
+
+if [ "$fortiwebdeploymode" == "twolegs" ]; then 
+ssh -o "StrictHostKeyChecking=no" azureuser@$vm_name  -i  ~/.ssh/$rsakeyname < interfaceport2config.txt
+ssh -o "StrictHostKeyChecking=no" azureuser@$vm_name  -i  ~/.ssh/$rsakeyname < staticrouteconfigtwolegs.txt
+else 
+ssh -o "StrictHostKeyChecking=no" azureuser@$vm_name  -i  ~/.ssh/$rsakeyname < staticrouteconfigonearm.txt
+fi
+
 ```
 **Verify the Fortiweb Configuration**
 
@@ -793,3 +843,21 @@ Access ingress service via external public ip or dns name
 ```bash
 k exec -it po/clientpod -- curl http://$svcdnsname/info 
 ```
+
+#### clean up
+
+**delete all resource**
+```bash
+resources=$(az resource list -g $resourceGroupName --query "[].{name:name, type:type}" -o tsv)
+while read -r resourceName resourceType; do
+    if [ -n "$resourceName" ] && [ -n "$resourceType" ]; then
+        echo "Deleting resource: $resourceName of type: $resourceType"
+        az resource delete --name "$resourceName" -g "$resourceGroupName" --resource-type "$resourceType"
+    fi
+done <<< "$resources"
+az resource list -g $resourceGroupName -o table
+rm ~/.kube/config
+ssh-keygen -R $vm_name
+```
+
+

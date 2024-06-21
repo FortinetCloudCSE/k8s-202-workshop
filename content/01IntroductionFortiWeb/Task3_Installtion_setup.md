@@ -30,10 +30,12 @@ else
     secondaryIp="10.0.1.100"
 fi
 owner="tecworkshop"
+location="westus"
 currentUser=$(az account show --query user.name -o tsv)
 resourceGroupName=$(az group list --query "[?tags.UserPrincipalName=='$currentUser'].name" -o tsv)
 if [ -z "$resourceGroupName" ]; then
-    az group create --name $resourceGroupName --tags UserPrincipalName=$currentUser
+    resourceGroupName=$owner-$(whoami)-"fortiweb-"$location-$(date -I)
+    az group create --name $resourceGroupName --tags UserPrincipalName=$currentUser --location $location
     resourceGroupName=$resourceGroupName
 fi
 location=$(az group show --name $resourceGroupName --query location -o tsv)
@@ -126,7 +128,6 @@ az network vnet subnet create \
   --resource-group $resourceGroupName \
   --vnet-name $vnetName \
   --name InternalSubnet \
-  --location $location \
   --address-prefix 10.0.2.0/24
 fi
 ```
@@ -495,7 +496,7 @@ kubectl rollout status deployment first-release-fwb-k8s-ctrl -n fortiwebingress
 **Check Fortiweb Ingress controller startup log**
 
 ```bash
-k logs -n 50 -l app.kubernetes.io/name=fwb-k8s-ctrl -n $fortiwebingresscontrollernamespace
+kubectl logs -n 50 -l app.kubernetes.io/name=fwb-k8s-ctrl -n $fortiwebingresscontrollernamespace
 ```
 you are expected to see output like 
 
@@ -849,13 +850,28 @@ k exec -it po/clientpod -- curl http://$svcdnsname/info
 **delete all resource**
 ```bash
 resources=$(az resource list -g $resourceGroupName --query "[].{name:name, type:type}" -o tsv)
-while read -r resourceName resourceType; do
-    if [ -n "$resourceName" ] && [ -n "$resourceType" ]; then
-        echo "Deleting resource: $resourceName of type: $resourceType"
-        az resource delete --name "$resourceName" -g "$resourceGroupName" --resource-type "$resourceType"
-    fi
-done <<< "$resources"
 az resource list -g $resourceGroupName -o table
+echo delete aks cluster
+az aks delete --name $aksClusterName -g $resourceGroupName 
+echo delete fortiweb vm 
+az vm delete --name MyFortiWebVM -g $resourceGroupName
+echo delete nic 
+az network nic delete --name NIC1 -g $resourceGroupName 
+az network nic delete --name NIC2 -g $resourceGroupName 
+
+echo delete public ip 
+az network public-ip delete --name FWBPublicIP -g $resourceGroupName
+az network public-ip delete --name FWBPublicIPPort2 -g $resourceGroupName
+echo delete fortiwebvm disk
+disks=$(az disk list -g $resourceGroupName --query "[].name" -o tsv)
+for disk in $disks; do
+az disk delete --name $disk --resource-group $resourceGroupName 
+done
+echo delete NSG
+az network nsg delete --name MyNSG --resource-group $resourceGroupName
+echo delete vnet
+az network vnet delete --name $vnetName -g $resourceGroupName
+az resource list  -g $resourceGroupName -o table 
 rm ~/.kube/config
 ssh-keygen -R $vm_name
 ```

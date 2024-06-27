@@ -40,80 +40,134 @@ FortiWeb leverages IP reputation services and Geo-IP based filtering to block tr
 
 These features collectively provide robust protection for web applications, ensuring they remain secure from a wide range of cyber threats while maintaining performance and accessibility. FortiWeb's comprehensive security measures make it an effective solution for businesses looking to safeguard their online operations.
 
-To enable protection policies on fortiweb here is the procedure: (This is just to understand how manually protection policy is created)
+### Lets create a protection profile to use for the TLS based ingress application.
 
-1. First we create Server pool to have the application servers in a backend pool. 
+1. On fortiweb > Policy > Web protection profile > click on "inline extended protection" and click clone at the top and give it a name: **ingress tls profile**. This profile name will be used later in the Ingress definition file. 
 
-We need to create the Server object for Fortiweb to send the traffic to application server.
+[image1](../images/fwebprotection.png)
 
-​		Navigate to Server Objects >> Server >> Server Pool >> Create new
+[image1](../images/fwebprotection2.png)
 
+2. Open the cloned protection profile to see there are few modules enbaled already. We will update these protection profiles as we perform attacks in the next chapter. 
 
-2. Input information as shown below. Select the Server Balance option for Server Health check option to appear. Click OK.
+3. Now lets create the TLS based ingress. 
 
-![image-20220602174520445](image-20220602174520445.png)
+4. To create TLS based ingress we need to first generate certificate. 
 
+```bash
+location="westus"
+fortiwebvmdnslabel="$(whoami)fortiwebvm7"
+echo $fortiwebvmdnslabel
+vm_name="$fortiwebvmdnslabel.$location.cloudapp.azure.com"
+fortiwebvmdnslabelport2="$(whoami)px2.$location.cloudapp.azure.com"
+echo $fortiwebvmdnslabelport2
+openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 \
+    -subj "/C=US/ST=California/L=Sunnyvale/O=GlobalSecurity/OU=Dev/CN=$fortiwebvmdnslabelport2" \
+    -keyout cert.key  -out cert.crt
+EOF
+```
+You should see cert.crt, cert.key created.
+
+5. Lets create a TLS secret to use the above cert and key.
+
+```kubectl create secret tls tls-secret --cert=cert.crt --key=cert.key```
+
+6. We will tell fortiweb ingress controller use fortiweb port1 ip for API access, and create VIP on Fortiweb Port1 secondary IP, the VIP address is on same subnet with Port1 with last octet set to .5.
+
+use below script to get Fortiweb Port1 and Port1 Secondary IP address , then create yaml file with these IP address
+
+```bash
+echo vm_name=$vm_name
+rsakeyname="id_rsa_tecworkshop"
+ssh-keygen -f "${HOME}/.ssh/known_hosts" -R "${vm_name}" 
+output=$(ssh -o "StrictHostKeyChecking=no" azureuser@$vm_name -i ~/.ssh/$rsakeyname 'get system interface')
+echo $output
+
+port1ip=$(echo "$output" | grep -A 7 "== \[ port1 \]" | grep "ip:" | awk '{print $2}' | cut -d'/' -f1)
+echo $port1ip
+
+port1ip_first3=$(echo "$port1ip" | cut -d'.' -f1-3)
+
+EOF
+```
+
+7.  To generate tlsingress.yaml file run the below code:
+
+```bash
+if kubectl get svc service1 ; then 
+cat << EOF | tee > 08_tls-ingress.yaml 
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: t
+  annotations: {
+    "fortiweb-ip" : $port1ip,    
+    "fortiweb-login" : "fwb-login1",  
+    "fortiweb-ctrl-log" : "enable",
+    "virtual-server-ip" : $port1ip_first3.5, 
+    "virtual-server-addr-type" : "ipv4",
+    "virtual-server-interface" : "port1",
+    "server-policy-web-protection-profile" : "ingress tls profile",
+    "server-policy-https-service" : "HTTPS",
+    "server-policy-http-service" : "HTTP",
+    "server-policy-syn-cookie" : "enable",
+    "server-policy-http-to-https" : "disable"
+  }
+spec:
+  ingressClassName: fwb-ingress-controller
+  tls:
+  - hosts: 
+     - $fortiwebvmdnslabelport2
+    secretName: tls-secret
+  rules:
+  - host: $fortiwebvmdnslabelport2
+    http:
+      paths:
+      - path: /info
+        pathType: Prefix
+        backend:
+          service:
+            name: service1
+            port:
+              number: 1241
  
-3. Once click OK in the above step the greyed out Create new button should now appear to create the Server object.
+EOF
+```
 
-![image-20220602174528782](image-20220602174528782.png)
+This is will generate **08_tls-ingress.yaml** file
 
-4. Now enter the IP address of application server, port number the pool member/application server listens for connections. 
+8. Now lets run ```kubectl apply -f 08_tls-ingress.yaml```
 
-![image-20220602174538435](image-20220602174538435.png)
+output:
 
-Click OK once you enter the information.
+```bash
+ingress.networking.k8s.io/t created
+EOF
+```
 
-5. Now we will need to create the Virtual Server IP on which the Traffic destined for server pool member arrives. When FortiWeb receives traffic destined for a Virtual server it can then forward to its pool members. 
+9. on fortiweb, there will be now a Server policy with Certificate, Web protection profile we created in Step1. 
 
-![image-20220602174547402](image-20220602174547402.png) 
+[image3](../images/fweb3.png)
 
-6. Enter the name for the Virtual Server and click OK. You can now click Create New to create the VIP object. 
+10. to verify the certificate, please run the belwo ommand in Azure shell. 
 
-![image-20220602174554614](image-20220602174554614.png)
+```echo $fortiwebvmdnslabelport2```
 
- 
-7. Virtual Server item can be an IP address of the interface or an IP other than the interface. In this case we will use the interface IP - Turn on the Radio button for “use interface IP”, a drop down with interfaces will appear. Select Port1 as the interface for this Virtual Server item and click OK.
+output:
 
-![image-20220602174605954](image-20220602174605954.png)
+```bash
+srijapx2.westus.cloudapp.azure.com
+EOF
+```
 
-8. The Virtual Server for the app will be using the IP address of the Port1 Interface. 
+11. In the browser: https://<dns>/info
 
-![image-20220602174621853](image-20220602174621853.png)
-
-
-9. We will now create a custom protection profile which we will be using in the Server policy to protect the application Server. 
-
-​		Navigate to Policy >> Web Protection Profile > click on Inline Standard protection >> Click Clone 
-
-![image-20220602174631921](image-20220602174631921.png)
-
-13. Create a custom Protection profile, you can give a name of your choice. 
-
-![image-20220602174644900](image-20220602174644900.png) 
-
-14. Now let’s create a Server policy. Input Name for the server policy, Select the Virtual Server, Server pool which we created in the earlier steps from the drop down. 
-
-​	   For the HTTP Service, Click **create new**
-
-![image-20220602174652731](image-20220602174652731.png)
-
-15. Enter the port number the Virtual Server traffic will be reached on. Let’s keep this to 3000. **(Note: You can set up any port here or even can use HTTP/HTTPS. To make it easy for the rest of the lab use Port 3000)** 
-
-![image-20220602174701454](image-20220602174701454.png)
-
- 
-16. Now let’s attach the protection profile you created in the earlier steps and click OK.
-
-![image-20220602174708421](image-20220602174708421.png)
-
-17. let’s Navigate to the browser and type the Public IP assigned to your FortiWeb instance to get to the web browser.
-
-​	   http://FortiWebIP:3000 
-
-​	  For example: http://157.56.182.90:3000
-
-![image-20220602174715897](image-20220602174715897.png)
+example: https://srijapx2.westus.cloudapp.azure.com
 
 
+[image4](../images/cert.png)
 
+
+we should see the certifcate CN name match your DNS/FQDN.
+
+[image4](../images/ceert2.png)

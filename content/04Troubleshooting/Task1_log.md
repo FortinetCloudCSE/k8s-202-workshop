@@ -62,4 +62,4 @@ To enable traffic log this has be done at policy level from the CLI.
    next 
    end
 
-3. . To view Traffic logs: In the “Log & Report” menu > Log Access > Traffic. 
+3. To view Traffic logs: In the “Log & Report” menu > Log Access > Traffic. 

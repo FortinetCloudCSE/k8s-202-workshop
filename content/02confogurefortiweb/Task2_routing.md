@@ -22,7 +22,6 @@ spec:
       name: single-service
       port:
         number: 80
-EOF
 ```
 Explanation:
 
@@ -57,7 +56,6 @@ spec:
             name: shop-service
             port:
               number: 80
-EOF
 ```
 Explanation:
 
@@ -93,7 +91,6 @@ spec:
       name: default-service
       port:
         number: 80
-EOF
 ```
 
 4. TLS/SSL Termination
@@ -120,7 +117,6 @@ spec:
             name: secure-service
             port:
               number: 80
-EOF
 ```
 
 Explanation:
@@ -152,7 +148,6 @@ spec:
             name: wildcard-service
             port:
               number: 80
-EOF
 ```
 Explanation:
 Requests to any subdomain of example.com are routed to wildcard-service
@@ -176,7 +171,6 @@ spec:
       name: default-service
       port:
         number: 80
-EOF
 ```
 
 Explanation:

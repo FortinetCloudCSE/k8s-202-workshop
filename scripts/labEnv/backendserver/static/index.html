@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gemini Prompt</title>
+    <style>
+        pre {
+            white-space: pre-wrap;       /* CSS 3 */
+            white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+            white-space: -pre-wrap;      /* Opera 4-6 */
+            white-space: -o-pre-wrap;    /* Opera 7 */
+            word-wrap: break-word;       /* Internet Explorer 5.5+ */
+        }
+    </style>
+    <!-- Include the marked.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        // Configure marked to handle line breaks
+        marked.setOptions({
+            breaks: true
+        });
+
+        function unescapeHtml(unsafe) {
+            return unsafe
+                .replace(/\\n/g, '\n')
+                .replace(/\\t/g, '\t')
+                .replace(/\\"/g, '"')
+                .replace(/\\u0026/g, '&')
+                .replace(/\\u003e/g, '>')
+                .replace(/\\u003c/g, '<');
+        }
+
+        async function submitPrompt(event) {
+            event.preventDefault();
+            const prompt = document.getElementById("prompt").value;
+            const response = await fetch('/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ prompt })
+            });
+            const data = await response.json();
+            if (data.error) {
+                document.getElementById("response").innerText = "Error: " + data.error;
+            } else {
+                const markdownResponse = unescapeHtml(data.response);
+                const htmlResponse = marked.parse(markdownResponse); // Use marked.parse instead of marked
+                document.getElementById("response").innerHTML = htmlResponse;
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Enter your prompt</h1>
+    <form id="promptForm" onsubmit="submitPrompt(event)">
+        <textarea id="prompt" name="prompt" rows="4" cols="50"></textarea><br>
+        <input type="submit" value="Submit">
+    </form>
+    <h2>Response:</h2>
+    <div id="response"></div>
+</body>
+</html>
+

@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: clientpod
+  labels: 
+    app: clientpod
+  annotations:
+    k8s.v1.cni.cncf.io/networks: '[ { "name": "cfosdefaultcni5",  "default-route": ["10.1.200.252"]  } ]'
+spec:
+  containers:
+  - name: clientpod
+    image: praqma/network-multitool
+    args: 
+      - /bin/sh
+      - -c 
+      - /usr/sbin/nginx -g "daemon off;"
+    securityContext:
+      privileged: true
+    volumeMounts:
+    - name: data-volume
+      mountPath: /data
+    - name: host-temp
+      mountPath: /mybinary
+  volumes:
+  - name: data-volume
+    emptyDir: {}
+  - name: host-temp
+    hostPath:
+      path: /cfosextrabinary
+      type: DirectoryOrCreate
+

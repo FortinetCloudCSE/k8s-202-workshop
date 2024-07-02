@@ -1,0 +1,38 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demogeminiclient
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demogeminiclient
+  template:
+    metadata:
+      labels:
+        app: demogeminiclient
+    spec:
+      containers:
+      - name: demogeminiclient
+        image: interbeing/myfmg:demogeminiclient0.5.0
+        imagePullPolicy: Always
+        env: 
+          - name: LOGLEVEL
+            value: "info"
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/config
+      volumes:
+      - name: config-volume
+        configMap:
+          name: demogeminiclientenv
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: demogeminiclientenv
+data:   
+   GEMINI_API_KEY: ""
+   PORT: "80"
+

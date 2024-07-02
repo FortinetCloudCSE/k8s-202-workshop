@@ -1,6 +1,6 @@
 ---
-title: "Ch 2 - Configuring Fortiweb"
+title: "Ch 3 - Configuring Fortiweb"
 chapter: false
-menuTitle: "Ch 2: Configuration"
+menuTitle: "Ch 3: Configuration"
 weight: 20
 ---

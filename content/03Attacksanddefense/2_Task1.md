@@ -60,17 +60,16 @@ kubectl apply -f juiceshopservice.yaml
 
 
 ```bash
-if kubectl get svc juiceshop ; then 
 cat << EOF | tee > 08_tls-ingress.yaml 
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: t
+  name: m
   annotations: {
     "fortiweb-ip" : $port1ip,    
     "fortiweb-login" : "fwb-login1",  
     "fortiweb-ctrl-log" : "enable",
-    "virtual-server-ip" : $port1ip_first3.5, 
+    "virtual-server-ip" : $port1ip_first3.100, 
     "virtual-server-addr-type" : "ipv4",
     "virtual-server-interface" : "port1",
     "server-policy-web-protection-profile" : "ingress tls profile",
@@ -107,15 +106,14 @@ spec:
 EOF
 ```
 
-This is will update and geenrate the **08_tls-ingress.yaml** file
+This is will update and generate the **08_tls-ingress.yaml** file
 
 4. Now lets run ```kubectl apply -f 08_tls-ingress.yaml```
 
 output:
 
 ```bash
-ingress.networking.k8s.io/t configured.
-EOF
+ingress.networking.k8s.io/m configured.
 ```
 
 5. the ingress controller will now have two paths. we can check by running:
@@ -128,7 +126,6 @@ output:
 srija [ ~/k8s-202-workshop/scripts/labEnv ]$ kubectl get ingress
 NAME   CLASS                    HOSTS                                ADDRESS    PORTS     AGE
 m      fwb-ingress-controller   srijapx2.westus.cloudapp.azure.com   10.0.1.5   80, 443   158m
-EOF
 ```
 
 ```kubectl describe ingress m```
@@ -162,7 +159,6 @@ Annotations:                          fortiweb-ctrl-log: disable
                                       virtual-server-interface: port1
                                       virtual-server-ip: 10.0.1.5
 Events:                               <none>
-EOF
 ```
 
 6. In the web browser, if you try going to https://hostname/ it will redirect to juiceshop, https://hostname/info will redirect to service1.
@@ -171,9 +167,9 @@ example:
 
 https://srijapx2.westus.cloudapp.azure.com/
 
-[juiceshop](../images/juiceshop.png)
+![juiceshop1](../images/juiceshop.png)
 
 https://srijapx2.westus.cloudapp.azure.com/info
 
-[juiceshop](../images/service1.png)
+![juiceshop2](../images/service1.png)
 

@@ -1,3 +1,8 @@
+---
+title: "SQLi attack"
+menuTitle: "SQLi attack"
+weight: 20
+---
 
 1. The first attack will be a SQLi attack. Please use Chrome browser to best follow the insrtuctions. 
 

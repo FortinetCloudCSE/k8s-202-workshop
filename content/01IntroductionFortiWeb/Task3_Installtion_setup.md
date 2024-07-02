@@ -1,41 +1,52 @@
 ---
-title: "Installation prerequisites and setting up the FortiWeb Ingress Controller"
-menuTitle: "Installation and Setup"
-weight: 30
+title: "Install and Setup FortiWeb Ingress Controller"
+menuTitle: "Ch 3: Installation and Setup"
+weight: 10
 ---
 
 #### Network Diagram
 In this chapter, we are going to create a lab setup as illustrated in the network diagram below.
 
-Fortiweb can be configured with two ports: port1 for incoming traffic and port2 for proxy traffic to the backend application. This is called the two-legs mode.
+Fortiweb can be configured with two ports: port1 for incoming traffic and port2 for proxy traffic to the backend application. This is called the twoarms mode here.
 
-**Fortiweb Two-Legs Mode**
-![Fortiweb with two ports](../images/fortiwebtwolegs.png)
+**Fortiweb TwoLegs Mode**
+![Fortiweb with two ports](../images/fortiwebtwoarms.png)
 
 Fortiweb can also be configured with a single port, where port1 handles both incoming traffic and proxy traffic to the backend application. This is called the one-arm mode.
 
-**Fortiweb One-Arm Mode**
+**Fortiweb OneArm Mode**
 ![Fortiweb with single port](../images/fortiwebonearm.png)
 
 
+In this workshop, you can choose to use twoarms mode or onearm mode.
+
 #### Prepare Environemnt Variables
 
+
 ```bash
-read -p "Enter deploy mode (twolegs/onearm) [twolegs]: " fortiwebdeploymode
-fortiwebdeploymode=${fortiwebdeploymode:-twolegs}
+read -p "Enter deploy mode (twoarms/onearm) [twoarms]: " fortiwebdeploymode
+fortiwebdeploymode=${fortiwebdeploymode:-twoarms}
 echo $fortiwebdeploymode 
-if [ "$fortiwebdeploymode" == "twolegs" ]; then
+if [ "$fortiwebdeploymode" == "twoarms" ]; then
     secondaryIp="10.0.2.100"
 else
     secondaryIp="10.0.1.100"
 fi
-location="westus"
 owner="tecworkshop"
-resourceGroupName=$owner-$(whoami)-"fortiweb-"$location-$(date +%Y-%m)
+currentUser=$(az account show --query user.name -o tsv)
+resourceGroupName=$(az group list --query "[?tags.UserPrincipalName=='$currentUser'].name" -o tsv)
+if [ -z "$resourceGroupName" ]; then
+    resourceGroupName=$owner-$(whoami)-"fortiweb-"$location-$(date -I)
+    az group create --name $resourceGroupName --tags UserPrincipalName=$currentUser --location $location
+    resourceGroupName=$resourceGroupName
+fi
+location=$(az group show --name $resourceGroupName --query location -o tsv)
+echo "Using resource group $resourceGroupName in location $location"
 
 cat << EOF | tee > $HOME/variable.sh
 #!/bin/bash -x
 vnetName="FortiWeb-VNET"
+aksVnetName="AKS-VNET"
 imageName="fortinet:fortinet_fortiweb-vm_v5:fortinet_fw-vm:latest"
 fortiwebUsername="azureuser"
 fortiwebPassword='Welcome.123456!'
@@ -43,9 +54,9 @@ fortiwebvmdnslabel="$(whoami)fortiwebvm7"
 aksClusterName=$(whoami)-aks-cluster
 rsakeyname="id_rsa_tecworkshop"
 vm_name="$(whoami)fortiwebvm7.${location}.cloudapp.azure.com"
+fortiwebvmdnslabelport2="$(whoami)px2"
 svcdnsname="$(whoami)px2.${location}.cloudapp.azure.com"
 remoteResourceGroup="MC"_${resourceGroupName}_$(whoami)-aks-cluster_${location} 
-fortiwebvmdnslabelport2="$(whoami)px2"
 nicName1="NIC1"
 nicName2="NIC2"
 EOF
@@ -59,21 +70,36 @@ line='if [ -f "$HOME/variable.sh" ]; then source $HOME/variable.sh ; fi'
 grep -qxF "$line" ~/.bashrc || echo "$line" >> ~/.bashrc
 source $HOME/variable.sh
 $HOME/variable.sh
-```
-#### Create Resource Group
-
-```bash
-az group create --name $resourceGroupName --location $location
-```
-
-Check creation result with 
-```bash
-az group show -g $resourceGroupName
+if [ -f $HOME/.ssh/known_hosts ]; then 
+grep -qxF "$vm_name" "$HOME/.ssh/known_hosts"  && ssh-keygen -R "$vm_name"
+fi
 ```
 
 #### Create Kubernetes Cluster
 
-We can use either managed K8s like AKS, EKS  or self-managed k8s like kubeadm etc.,
+We can use either managed K8s like AKS, EKS  or self-managed k8s like kubeadm etc., in this workshop, let's use AKS. 
+
+We will create aks VNET and Fortiweb VNET in same resourceGroup, in reality, you can also create them in different resourceGroup. 
+
+**create aks VNET and subnet**
+
+```bash
+az network vnet create -g $resourceGroupName  --name  $aksVnetName --location $location  --subnet-name aksSubnet --subnet-prefix 10.224.0.0/24 --address-prefix 10.224.0.0/16
+```
+
+**get aksSubnetId** 
+
+this aksSubnetId will be need when create AKS. 
+
+```bash
+aksSubnetId=$(az network vnet subnet show \
+  --resource-group $resourceGroupName \
+  --vnet-name $aksVnetName \
+  --name aksSubnet \
+  --query id -o tsv)
+echo $aksSubnetId
+```
+**create AKS cluster**
 
 ```bash
 [ ! -f ~/.ssh/$rsakeyname ] && ssh-keygen -t rsa -b 4096 -q -N "" -f ~/.ssh/$rsakeyname
@@ -83,30 +109,54 @@ az aks create \
     --node-count 1 \
     --vm-set-type VirtualMachineScaleSets \
     --network-plugin azure \
+    --location $location \
     --service-cidr  10.96.0.0/16 \
     --dns-service-ip 10.96.0.10 \
     --nodepool-name worker \
     --resource-group $resourceGroupName \
+    --kubernetes-version 1.28.9 \
+    --vnet-subnet-id $aksSubnetId \
+    --only-show-errors \
     --ssh-key-value ~/.ssh/${rsakeyname}.pub
 az aks get-credentials -g  $resourceGroupName -n ${aksClusterName} --overwrite-existing
+
 ```
 Check Creation result with 
 ```
-kubectl get node 
+kubectl get node  -o wide
 ```
-you shall found node are in "ready" status and "VERSION" is v.1.28.9
+you shall found node are in "ready" status and "VERSION" is v.1.28.9, the node shall have an internal ip assigned. 
+
+```
+NAME                             STATUS   ROLES   AGE     VERSION   INTERNAL-IP   EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION      CONTAINER-RUNTIME
+aks-worker-12061195-vmss000000   Ready    agent   8m51s   v1.28.9   10.224.0.4    <none>        Ubuntu 22.04.4 LTS   5.15.0-1064-azure   containerd://1.7.15-1
+```
+
+Check the Vnet of this aks cluster.
+
+```bash
+az network vnet list -g $resourceGroupName -o table
+```
+
+you will find azure created  a Vnet for this AKS.
+```
+k8s51 [ ~ ]$ az network vnet list -g $resourceGroupName -o table
+Name      ResourceGroup          Location    NumSubnets    Prefixes       DnsServers    DDOSProtection    VMProtection
+--------  ---------------------  ----------  ------------  -------------  ------------  ----------------  --------------
+AKS-VNET  k8s51-k8s101-workshop  eastus      1             10.224.0.0/16                False
+```
 
 
 
 #### Deploy FortiWeb VM in dedicated VNET 
 
-In this workshop, We are going to deploy FortiWeb VM in it's own VNET, FortiWeb will use two legs deployment model, below lists the components going to be deployed 
-- VNET
+In this workshop, We are going to deploy FortiWeb VM in it's own VNET, FortiWeb will use twoarms or onearm  deployment model, below lists the components going to be deployed 
+- VNET : 10.0.0.0/16 
 - Subnet1: 10.0.1.0/24
-- Subnet2: 10.0.2.0/24 when fortiweb in two legs mode
+- Subnet2: 10.0.2.0/24 when fortiweb in twoarms mode
 - NSG : allow all traffic 
 - NIC1 with Public IP for SSH access and Management, in Subnet1
-- NIC2 for internal traffic, in Subnet2, when fortiweb in two legs mode
+- NIC2 for internal traffic, in Subnet2, when fortiweb in twoarms mode
 - VM with Extra DISK for log
 
 **Create VNET with Subnet1**
@@ -115,14 +165,15 @@ In this workshop, We are going to deploy FortiWeb VM in it's own VNET, FortiWeb 
 az network vnet create \
   --resource-group $resourceGroupName \
   --name $vnetName \
+  --location $location \
   --address-prefix 10.0.0.0/16 \
   --subnet-name ExternalSubnet \
   --subnet-prefix 10.0.1.0/24
 ```
-**Create Subnet2**
+**Create Subnet2 in same VNET if use twoarms mode**
 
 ```bash
-if [ "$fortiwebdeploymode" == "twolegs" ]; then 
+if [ "$fortiwebdeploymode" == "twoarms" ]; then 
 az network vnet subnet create \
   --resource-group $resourceGroupName \
   --vnet-name $vnetName \
@@ -133,9 +184,12 @@ fi
 
 **Create NGS with Rule**
 
+this NSG will be attached to Fortiweb VM NICs.
+
 ```bash
 az network nsg create \
   --resource-group $resourceGroupName \
+  --location $location \
   --name MyNSG
 
 az network nsg rule create \
@@ -153,15 +207,19 @@ az network nsg rule create \
 
 **Create PublicIP with a DNS name**
 
-this publicip server for mgmt purpose, we can use this ip for SSh and WebGUI
+this publicip serve for mgmt purpose, we can use this ip for SSH and WebGUI to Fortiweb VM via IP address or DNS name
+
+the Fortiweb factory default configuration only have SSH service and WebGUI service enabled on Port1. so this Public IP will be associated to Fortiweb VM Port1. 
 
 ```bash
 az network public-ip create \
   --resource-group $resourceGroupName \
+  --location $location \
   --name FWBPublicIP \
   --allocation-method Static \
   --sku Standard \
-  --dns-name $fortiwebvmdnslabel
+  --dns-name $fortiwebvmdnslabel \
+  --only-show-errors 
 ```
 
 **Create NIC1 and attach PublicIP**
@@ -169,6 +227,7 @@ az network public-ip create \
 ```bash
 az network nic create \
   --resource-group $resourceGroupName \
+  --location $location \
   --name NIC1 \
   --vnet-name $vnetName \
   --subnet ExternalSubnet \
@@ -182,12 +241,13 @@ az network nic update \
 
 ```
 
-**Create NIC2**
+**Create NIC2 if Fortiweb use twoarms mode**
 
 ```bash
-if [ "$fortiwebdeploymode" == "twolegs" ]; then 
+if [ "$fortiwebdeploymode" == "twoarms" ]; then 
 az network nic create \
   --resource-group $resourceGroupName \
+  --location $location \
   --name NIC2 \
   --vnet-name $vnetName \
   --subnet InternalSubnet \
@@ -205,7 +265,7 @@ fi
 **Create VM with storage Disk**
 
 ```bash
-if [ "$fortiwebdeploymode" == "twolegs" ]; then 
+if [ "$fortiwebdeploymode" == "twoarms" ]; then 
 nics="NIC1 NIC2" 
 else
 nics="NIC1"
@@ -222,22 +282,48 @@ az vm create \
   --location $location \
   --public-ip-address-dns-name $fortiwebvmdnslabel \
   --data-disk-sizes-gb 30 \
-  --ssh-key-values @~/.ssh/${rsakeyname}.pub
+  --ssh-key-values @~/.ssh/${rsakeyname}.pub \
+  --only-show-errors
 ```
-you shall see output like this  if fortiweb in twolegs mode
+you shall see output like this  if fortiweb in twoarms mode
 
 ```
 {
-  "fqdns": "andyfortiwebvm7.westus.cloudapp.azure.com",
-  "id": "/subscriptions/10d679ec-0db6-4d5e-ab03-cbc68d5dd8e3/resourceGroups/tecworkshop-andy-fortiweb-westus-2024-06/providers/Microsoft.Compute/virtualMachines/MyFortiWebVM",
-  "location": "westus",
-  "macAddress": "00-22-48-04-A0-56,00-22-48-04-AB-55",
+  "fqdns": "k8s51fortiwebvm7.eastus.cloudapp.azure.com",
+  "id": "/subscriptions/02b50049-c444-416f-a126-3e4c815501ac/resourceGroups/k8s51-k8s101-workshop/providers/Microsoft.Compute/virtualMachines/MyFortiWebVM",
+  "location": "eastus",
+  "macAddress": "60-45-BD-D8-14-AF,60-45-BD-D8-1D-FE",
   "powerState": "VM running",
   "privateIpAddress": "10.0.1.4,10.0.2.4",
-  "publicIpAddress": "104.40.59.52",
-  "resourceGroup": "tecworkshop-andy-fortiweb-westus-2024-06",
-  "z
+  "publicIpAddress": "13.90.210.29",
+  "resourceGroup": "k8s51-k8s101-workshop",
+  "zones": ""
 }
+
+```
+
+**Check all the resource you created**
+
+```bash
+az resource list -g $resourceGroupName -o table
+```
+
+you shall see output like 
+
+```
+k8s51 [ ~ ]$ az resource list -g $resourceGroupName -o table
+Name                                                    ResourceGroup          Location    Type                                        Status
+------------------------------------------------------  ---------------------  ----------  ------------------------------------------  --------
+AKS-VNET                                                k8s51-k8s101-workshop  eastus      Microsoft.Network/virtualNetworks
+k8s51-aks-cluster                                       k8s51-k8s101-workshop  eastus      Microsoft.ContainerService/managedClusters
+FortiWeb-VNET                                           k8s51-k8s101-workshop  eastus      Microsoft.Network/virtualNetworks
+MyNSG                                                   k8s51-k8s101-workshop  eastus      Microsoft.Network/networkSecurityGroups
+FWBPublicIP                                             k8s51-k8s101-workshop  eastus      Microsoft.Network/publicIPAddresses
+NIC1                                                    k8s51-k8s101-workshop  eastus      Microsoft.Network/networkInterfaces
+NIC2                                                    k8s51-k8s101-workshop  eastus      Microsoft.Network/networkInterfaces
+MyFortiWebVM                                            k8s51-k8s101-workshop  eastus      Microsoft.Compute/virtualMachines
+MyFortiWebVM_disk2_1a5d56afec9745dba51cfed47fd133dc     K8S51-K8S101-WORKSHOP  eastus      Microsoft.Compute/disks
+MyFortiWebVM_OsDisk_1_6259c4a932fe4cfd866015e1fb611558  K8S51-K8S101-WORKSHOP  eastus      Microsoft.Compute/disks
 ```
 
 **Verify Fortiweb VM has been created and you have ssh access to it**
@@ -254,7 +340,7 @@ ssh -o "StrictHostKeyChecking=no" azureuser@$vm_name -i $HOME/.ssh/$rsakeyname "
 
 #### Create VNET Peering
 
-Because AKS and Fortiweb are in different VNET, we are going to use  VNET Peering to connect Fortiweb VM with AKS workernode. 
+Because AKS and Fortiweb are in different VNET, they are isolated each other, we are going to use VNET Peering to connect Fortiweb VM with AKS workernode, to do that, we need to get the both side vnetId for create peering. 
 
 **define localPeer name and RemotePeer name **
 
@@ -272,9 +358,8 @@ localVnetId=$(az network vnet show --resource-group $resourceGroupName --name $v
 **Get the full resource ID of the remote VNet**
 
 ```bash
-remoteVnetName=$(az network vnet list  --resource-group $remoteResourceGroup --query "[0].name" -o tsv)
-remoteVnetId=$(az network vnet show --resource-group $remoteResourceGroup --name $remoteVnetName --query "id" -o tsv)
-echo "Remote VNet ID: $remoteVnetId"
+remoteVnetId=$(az network vnet show  --resource-group $resourceGroupName --name $aksVnetName  --query "id" -o tsv)
+echo $remoteVnetId
 ```
 
 **Create peering from local VNet to remote VNet**
@@ -293,10 +378,27 @@ az network vnet peering create \
 ```bash
 az network vnet peering create \
   --name $remotePeeringName \
-  --resource-group $remoteResourceGroup \
-  --vnet-name $remoteVnetName \
+  --resource-group $resourceGroupName \
+  --vnet-name $aksVnetName \
   --remote-vnet $localVnetId \
   --allow-vnet-access
+```
+**Check vnet peering status**
+
+```bash
+az network vnet peering list -g $resourceGroupName --vnet-name AKS-VNET -o table
+az network vnet peering list -g $resourceGroupName --vnet-name FortiWeb-VNET -o table
+```
+
+you shall see output like 
+
+```
+AllowForwardedTraffic    AllowGatewayTransit    AllowVirtualNetworkAccess    DoNotVerifyRemoteGateways    Name                  PeeringState    PeeringSyncLevel    ProvisioningState    ResourceGroup          ResourceGuid                          UseRemoteGateways
+-----------------------  ---------------------  ---------------------------  ---------------------------  --------------------  --------------  ------------------  -------------------  ---------------------  ------------------------------------  -------------------
+False                    False                  True                         False                        AksToFortiWebPeering  Connected       FullyInSync         Succeeded            k8s51-k8s101-workshop  e867030a-0101-00b2-19a0-fba24c2151dd  False
+AllowForwardedTraffic    AllowGatewayTransit    AllowVirtualNetworkAccess    DoNotVerifyRemoteGateways    Name                  PeeringState    PeeringSyncLevel    ProvisioningState    ResourceGroup          ResourceGuid                          UseRemoteGateways
+-----------------------  ---------------------  ---------------------------  ---------------------------  --------------------  --------------  ------------------  -------------------  ---------------------  ------------------------------------  -------------------
+False                    False                  True                         False                        FortiWebToAksPeering  Connected       FullyInSync         Succeeded            k8s51-k8s101-workshop  e867030a-0101-00b2-19a0-fba24c2151dd  False
 ```
 
 #### Verify the connectivity between Fortiweb VM and AKS 
@@ -333,12 +435,15 @@ config list:
 2. enable traffic log
 3. config static route
 - static route to AKS vnet subnet via Port1
-- default route to internet via Port2 when use fortiweb in twolegs mode
+- default route to internet via Port2 when use fortiweb in twoarms mode
 - static route to your client IP (your azure shell) via Port1 
+this is to keep your client machine (your azure shell) can SSH into Fortiweb via Port1 public ip.
 
 ```bash
+##get your azure shell client ip
 myclientip=$(curl -s https://api.ipify.org)
-echo $myclientip
+echo $myclientip 
+
 cat << EOF | tee > basiconfig.txt
 config system global
   set admin-sport 443
@@ -346,6 +451,8 @@ end
 config log traffic-log
   set status enable
 end
+EOF
+cat << EOF | tee > interfaceport2config.txt
 config system interface
   edit "port2"
     set type physical
@@ -353,6 +460,9 @@ config system interface
     set mode dhcp
   next
 end
+EOF
+
+cat << EOF | tee > staticrouteconfigtwoarms.txt
 config router static
   edit 10
     set dst 10.224.0.0/16
@@ -371,7 +481,25 @@ config router static
   next
 end
 EOF
+
+cat << EOF | tee > staticrouteconfigonearm.txt
+config router static
+  edit 10
+    set dst 10.224.0.0/16
+    set gateway 10.0.1.1
+    set device port1
+  next
+EOF
+
 ssh -o "StrictHostKeyChecking=no" azureuser@$vm_name  -i  ~/.ssh/$rsakeyname < basiconfig.txt
+
+if [ "$fortiwebdeploymode" == "twoarms" ]; then 
+ssh -o "StrictHostKeyChecking=no" azureuser@$vm_name  -i  ~/.ssh/$rsakeyname < interfaceport2config.txt
+ssh -o "StrictHostKeyChecking=no" azureuser@$vm_name  -i  ~/.ssh/$rsakeyname < staticrouteconfigtwoarms.txt
+else 
+ssh -o "StrictHostKeyChecking=no" azureuser@$vm_name  -i  ~/.ssh/$rsakeyname < staticrouteconfigonearm.txt
+fi
+
 ```
 **Verify the Fortiweb Configuration**
 
@@ -445,7 +573,7 @@ kubectl rollout status deployment first-release-fwb-k8s-ctrl -n fortiwebingress
 **Check Fortiweb Ingress controller startup log**
 
 ```bash
-k logs -n 50 -l app.kubernetes.io/name=fwb-k8s-ctrl -n $fortiwebingresscontrollernamespace
+kubectl logs -n 50 -l app.kubernetes.io/name=fwb-k8s-ctrl -n $fortiwebingresscontrollernamespace
 ```
 you are expected to see output like 
 
@@ -578,7 +706,7 @@ use below script to get Fortiweb Port1 and Port2 IP address , then create yaml f
 ```bash
 output=$(ssh -o "StrictHostKeyChecking=no" azureuser@$vm_name -i ~/.ssh/$rsakeyname 'get system interface')
 port1ip=$(echo "$output" | grep -A 7 "== \[ port1 \]" | grep "ip:" | awk '{print $2}' | cut -d'/' -f1)
-if [ "$fortiwebdeploymode" == "twolegs" ]; then
+if [ "$fortiwebdeploymode" == "twoarms" ]; then
 port2ip=$(echo "$output" | grep -A 7 "== \[ port2 \]" | grep "ip:" | awk '{print $2}' | cut -d'/' -f1)
 echo port2ip=$port2ip
 vip=$(echo "$port2ip" | cut -d'.' -f1-3).100
@@ -608,7 +736,7 @@ if request url is /generate, the traffic will be redirect to service1
 if request url is /info , the traffic will be redirect to service2
 
 ```bash
-if [ "$fortiwebdeploymode" == "twolegs" ]; then
+if [ "$fortiwebdeploymode" == "twoarms" ]; then
 vipport="port2"
 else
 vipport="port1"
@@ -715,22 +843,54 @@ kubectl apply -f clientpod.yaml
 
 Verify nodePort svc
 
-Since fortiweb VM is outside of cluster, fortiweb will use AKS nodePort to reach backend application. therefore the backend application has exposed via NodePort Svc , the client pod shall able to reach backend application via nodePort
+Since fortiweb VM is outside of cluster, fortiweb will use AKS nodePort to reach backend application. therefore the backend application has exposed via NodePort Svc , the client pod shall able to reach backend application via nodePort. so does Fortiweb VM. 
 
 ```bash
 nodePort=$(kubectl get svc service1 -o jsonpath='{.spec.ports[0].nodePort}')
-kubectl exec -it po/clientpod -- curl  http://10.224.0.4:$nodePort/info 
+kubectl exec -it po/clientpod -- curl  http://$nodeIp:$nodePort/info 
+```
+and
+
+```bash
+ssh -o "StrictHostKeyChecking=no" azureuser@$vm_name -i $HOME/.ssh/$rsakeyname execute curl http://$nodeIp:$nodePort/info
 ```
 
 you shall expect to see output like 
 ```
+MyFortiWebVM #   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0*   Trying 10.224.0.10:30890...
+* Connected to 10.224.0.10 (10.224.0.10) port 30890
+> GET /info HTTP/1.1
+> Host: 10.224.0.10:30890
+> User-Agent: curl/8.4.0
+> Accept: */*
+> 
+< HTTP/1.1 200 OK
+< Content-Type: application/json
+< Date: Tue, 25 Jun 2024 01:59:56 GMT
+< Content-Length: 20
+< 
+{ [20 bytes data]
+100    20  100    20    0     0HTTP/1.1 200 OK
+Content-Type: application/json
+Date: Tue, 25 Jun 2024 01:59:56 GMT
+Content-Length: 20
+
 {"version":"0.6.0"}
+   5333      0 --:--:-- --:--:-- --:--:--  6666
+* Connection #0 to host 10.224.0.10 left intact
+
+
 ```
 
 ### create NIC2 secondary ip and associate with public ip
 
+This is to create an IP for use it as VIP on fortiweb and associate with a public ip for external access when run fortiweb with twoarms mode.
+ 
+
 ```bash
-if [ "$fortiwebdeploymode" == "twolegs" ]; then
+if [ "$fortiwebdeploymode" == "twoarms" ]; then
 vipnicname="NIC2"
 else        
 vipnicname="NIC1"  
@@ -763,9 +923,10 @@ az network nic show \
 you shall see output like 
 ```
 Name               Primary    PrivateIPAddress    PrivateIPAddressVersion    PrivateIPAllocationMethod    ProvisioningState    ResourceGroup
------------------  ---------  ------------------  -------------------------  ---------------------------  -------------------  ----------------------------------------
-ipconfig1          True       10.0.2.4            IPv4                       Dynamic                      Succeeded            tecworkshop-andy-fortiweb-westus-2024-06
-ipconfigSecondary  False      10.0.2.100          IPv4                       Static                       Succeeded            tecworkshop-andy-fortiweb-westus-2024-06
+-----------------  ---------  ------------------  -------------------------  ---------------------------  -------------------  ---------------------
+ipconfig1          True       10.0.2.4            IPv4                       Dynamic                      Succeeded            k8s51-k8s101-workshop
+ipconfigSecondary  False      10.0.2.100          IPv4                       Static                       Succeeded            k8s51-k8s101-workshop
+
 ```
 
 Verify connectivity to Fortiweb VIP
@@ -791,5 +952,42 @@ you shall get the response from backend server like this , which indicate you do
 Access ingress service via external public ip or dns name
 
 ```bash
-k exec -it po/clientpod -- curl http://$svcdnsname/info 
+kubectl exec -it po/clientpod -- curl http://$svcdnsname/info 
 ```
+
+#### clean up
+
+**delete all resource**
+
+if you want startover again, you can delete all resource then redo the installation 
+
+```bash
+resources=$(az resource list -g $resourceGroupName --query "[].{name:name, type:type}" -o tsv)
+az resource list -g $resourceGroupName -o table
+echo delete aks cluster
+az aks delete --name $aksClusterName -g $resourceGroupName 
+echo delete fortiweb vm 
+az vm delete --name MyFortiWebVM -g $resourceGroupName
+echo delete nic 
+az network nic delete --name NIC1 -g $resourceGroupName 
+az network nic delete --name NIC2 -g $resourceGroupName 
+
+echo delete public ip 
+az network public-ip delete --name FWBPublicIP -g $resourceGroupName
+az network public-ip delete --name FWBPublicIPPort2 -g $resourceGroupName
+echo delete fortiwebvm disk
+disks=$(az disk list -g $resourceGroupName --query "[].name" -o tsv)
+for disk in $disks; do
+az disk delete --name $disk --resource-group $resourceGroupName 
+done
+echo delete NSG
+az network nsg delete --name MyNSG --resource-group $resourceGroupName
+echo delete vnet
+az network vnet delete --name $vnetName -g $resourceGroupName
+az network vnet delete --name aksvnet -g $resourceGroupName
+az resource list  -g $resourceGroupName -o table 
+rm ~/.kube/config
+ssh-keygen -R $vm_name
+```
+
+

@@ -2,7 +2,7 @@
 title: "Finetuning"
 menuTitle: "finetuning"
 chapter: false
-weight: 20
+weight: 30
 ---
 
 Optimizing the performance of a FortiWeb Web Application Firewall (WAF) is crucial for maintaining the security of your web applications without sacrificing user experience due to latency or downtime. Here are some best practices specifically tailored for tuning and optimizing FortiWeb:

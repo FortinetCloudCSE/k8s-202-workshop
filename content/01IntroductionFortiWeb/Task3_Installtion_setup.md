@@ -1,7 +1,7 @@
 ---
 title: "Installation prerequisites and setting up the FortiWeb Ingress Controller"
 menuTitle: "Ch 3: Installation and Setup"
-weight: 10
+weight: 30
 ---
 
 #### Network Diagram

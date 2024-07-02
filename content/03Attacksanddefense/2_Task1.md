@@ -1,8 +1,7 @@
 ---
 title: "Attack"
-menuTitle: "Legacy Hugo Build"
-chapter: false
-weight: 50
+menuTitle: "Attack"
+weight: 10
 ---
 
 

@@ -1,3 +1,8 @@
+---
+title: "URL rewriting"
+menuTitle: "URL rewriting"
+weight: 30
+---
 
 
 lets also explore URL rewriting with Fortiweb. Fortiweb supports several URL rewriting capabilities which can be very important and useful in production applications.

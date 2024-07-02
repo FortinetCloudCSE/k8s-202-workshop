@@ -1,6 +1,6 @@
 ---
 title: "Install and Setup FortiWeb Ingress Controller"
-menuTitle: "Ch 3: Installation and Setup"
+menuTitle: "Installation and Setup"
 weight: 30
 ---
 

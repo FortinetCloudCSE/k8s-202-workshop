@@ -70,7 +70,6 @@ https://srijapx2.westus.cloudapp.azure.com/rest/products/search?q=<script>$('inp
 
 We will see block page again but find out from the attack log what attack this is. 
 
-
 Q and A.
 
 1. What attack was triggered in step 11?

@@ -46,6 +46,7 @@ connect to, such as 192.168.1.5.
 
 If the appliance can reach the host via ICMP, output similar to the following appears:
 
+```bash
 PING 192.0.2.96 (192.0.2.96): 56 data bytes
 64 bytes from 192.0.2.96: icmp_seq=0 ttl=253 time=6.5 ms
 64 bytes from 192.0.2.96: icmp_seq=1 ttl=253 time=7.4 ms
@@ -55,9 +56,13 @@ PING 192.0.2.96 (192.0.2.96): 56 data bytes
 --- 192.0.2.96 ping statistics ---
 5 packets transmitted, 5 packets received, 0% packet loss
 round-trip min/avg/max = 5.5/6.5/7.4 ms
+EOF
+```
 
 
 If the appliance cannot reach the host via ICMP, output similar to the following appears:
+
+```bash
 PING 192.0.2.108 (192.0.2.108): 56 data bytes
 Timeout ...
 Timeout ...
@@ -66,6 +71,8 @@ Timeout ...
 Timeout ...
 --- 192.0.2.108 ping statistics ---
 5 packets transmitted, 0 packets received, 100% packet loss
+EOF
+```
 
 “100% packet loss” and “Timeout” indicates that the host is not reachable.
 

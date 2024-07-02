@@ -35,25 +35,27 @@ Set:
 - **Action type**: Request Action
 - **Request Action**: Redirect (31 Permanently)
 
-- Now in the URL rewrite condition tabel:
+**Now in the URL rewrite condition tabel:**
 
-Click create new
+- Click create new
 
-- Set:
+Set:
 
-- **HTTP HOST**: your FQDN (same as the one in the content routing policy)
+- **HTTP HOST**: your FQDN  
+
+(**FQDN can be found by running ```echo $fortiwebvmdnslabelport2``` in Azure shell.**)
 
 ![juiceshop59](../images/httphost.png)
 
 - **HTTP URL**: /info
 
-- **Replacement location**: https://<FQDN>/
+- **Replacement location**: https://**<FQDN>**/ 
 
 - Click OK.
 
 Finally it looks like below: 
 
-![juiceshop60](../images/uclpr.png)
+![juiceshop60](../images/uclcr.png)
 
 2. Lets create a URL rewriting policy by giving a name.
 
@@ -61,8 +63,7 @@ click create new and select the Rule we have create in previous step from the dr
 
 ![juiceshop61](../images/rewrite.png)
 
-
-![juiceshop62](../images/hostrewrite.png)
+![juiceshop62](../images/hostrewrite1.png)
 
 Finally it looks like below:
 
@@ -74,10 +75,10 @@ Finally it looks like below:
 
 Click OK.
 
-4. Now when we input https://<FQDN>/info in the browser, it will now redirect to juiceshop application automatically. 
+4. Now when we input https://**<FQDN>**/info in the browser, it will now redirect to juiceshop application automatically. 
 
 
-DOS protection/Rate limiting:
+### DOS protection/Rate limiting:
 
 1. To create a DOS rate limiting policy on Fortiweb > DOS protection > HTTP Access limit > Create new
 
@@ -87,7 +88,7 @@ DOS protection/Rate limiting:
 
 3. Create a DOS protection policy. on Fortiweb DOS Protection > DoS protection policy > Create new
 
-[!juiceshop101](../images/dosp.png)
+![juiceshop101](../images/dosp.png)
 
 
 4. Give it a name, "enable HTTP DOS prevention:, selectt he HTTP Access limit policy create in Step 2. Click OK.
@@ -102,12 +103,9 @@ DOS protection/Rate limiting:
 
 ```bash
 cat << EOF | tee > dos.py
-location="westus"
-fortiwebvmdnslabel="$(whoami)px2"
-vm_name="$fortiwebvmdnslabel.$location.cloudapp.azure.com"
 import requests
 # Define the URL
-url = "https://$vm_name"
+url = "https://$fortiwebvmdnslabelport2"
 
 # Loop to run 100 GET requests
 for i in range(1, 101):

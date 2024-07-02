@@ -1,7 +1,7 @@
 ---
 title: "Install and Setup FortiWeb Ingress Controller"
 menuTitle: "Ch 3: Installation and Setup"
-weight: 10
+weight: 30
 ---
 
 #### Network Diagram
@@ -99,7 +99,9 @@ aksSubnetId=$(az network vnet subnet show \
   --query id -o tsv)
 echo $aksSubnetId
 ```
-**create AKS cluster**
+**create AKS cluster** 
+
+**this may take a while to complete**
 
 ```bash
 [ ! -f ~/.ssh/$rsakeyname ] && ssh-keygen -t rsa -b 4096 -q -N "" -f ~/.ssh/$rsakeyname
@@ -182,7 +184,7 @@ az network vnet subnet create \
 fi
 ```
 
-**Create NGS with Rule**
+**Create NSG with Rule**
 
 this NSG will be attached to Fortiweb VM NICs.
 

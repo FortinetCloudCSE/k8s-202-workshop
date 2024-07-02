@@ -1,7 +1,7 @@
 ---
-title: "Ch 3 - Attacks and other Fortiweb configs"
+title: "Ch 4 - Attacks and other Fortiweb configs"
 chapter: false
-menuTitle: "Ch 3: Fortiweb attacks, config"
+menuTitle: "Ch 4: Fortiweb attacks, config"
 weight: 30
 ---
 

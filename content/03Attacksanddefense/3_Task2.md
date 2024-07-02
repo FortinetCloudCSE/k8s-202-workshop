@@ -1,8 +1,9 @@
 ---
-title: "SQLi attack"
-menuTitle: "SQLi attack"
-weight: 20
+title: "Sql injection"
+menuTitle: "SQL injection"
+weight: 10
 ---
+
 
 1. The first attack will be a SQLi attack. Please use Chrome browser to best follow the insrtuctions. 
 
@@ -66,7 +67,10 @@ https://srijapx2.westus.cloudapp.azure.com/rest/products/search?q='''''''''''''U
 
 example:
 
-https://srijapx2.westus.cloudapp.azure.com/rest/products/search?q=<script>$('input').value="';DELETE FROM USERS;--";$('form').submit()</script>
+```bash
+"https://srijapx2.westus.cloudapp.azure.com/rest/products/search?q=<script>$('input').value="';DELETE FROM USERS;--";$('form').submit()</script>"
+EOF
+```
 
 We will see block page again but find out from the attack log what attack this is. 
 

@@ -1,6 +1,6 @@
 ---
 title: "Introduction to FortiWeb and its functionalities"
-menuTitle: "Ch 1: Introduction to FortiWeb and its functionalities"
+menuTitle: "FortiWeb and its functionalities"
 weight: 10
 ---
 

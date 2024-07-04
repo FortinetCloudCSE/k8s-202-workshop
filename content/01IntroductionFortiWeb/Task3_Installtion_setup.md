@@ -5,27 +5,33 @@ weight: 30
 ---
 
 #### Network Diagram
-In this chapter, we are going to create a lab setup as illustrated in the network diagram below.
 
-Fortiweb can be configured with two ports: port1 for incoming traffic and port2 for proxy traffic to the backend application. This is called the twoarms mode here.
+In this chapter, we will create a lab setup as illustrated in the network diagrams below.
 
-**Fortiweb TwoLegs Mode**
-![Fortiweb with two ports](../images/fortiwebtwoarms.png)
+FortiWeb can be configured with two different modes: **Two-Arms Mode** and **One-Arm Mode**.
 
-Fortiweb can also be configured with a single port, where port1 handles both incoming traffic and proxy traffic to the backend application. This is called the one-arm mode.
+##### FortiWeb Two-Arms Mode
+In Two-Arms Mode, FortiWeb is configured with two ports:
+- **Port1** for incoming traffic
+- **Port2** for proxy traffic to the backend application
 
-**Fortiweb OneArm Mode**
-![Fortiweb with single port](../images/fortiwebonearm.png)
+![FortiWeb with Two Ports](../images/fortiwebtwoarms.png)
 
+##### FortiWeb One-Arm Mode
+In One-Arm Mode, FortiWeb is configured with a single port:
+- **Port1** handles both incoming traffic and proxy traffic to the backend application.
 
-In this workshop, please use default onearm mode. 
+![FortiWeb with Single Port](../images/fortiwebonearm.png)
 
-#### Prepare Environemnt Variables
+#### Workshop Configuration
+In this workshop, we will use the default **One-Arm Mode**.
+
+##### Prepare Environment Variables
 
 
 ```bash
 read -p "Enter deploy mode (twoarms/onearm) [onearm]: " fortiwebdeploymode
-fortiwebdeploymode=${fortiwebdeploymode:-twoarms}
+fortiwebdeploymode=${fortiwebdeploymode:-onearm}
 echo $fortiwebdeploymode 
 if [ "$fortiwebdeploymode" == "twoarms" ]; then
     secondaryIp="10.0.2.100"
@@ -79,9 +85,10 @@ fi
 
 #### Create Kubernetes Cluster
 
-We can use either managed K8s like AKS, EKS  or self-managed k8s like kubeadm etc., in this workshop, let's use AKS. 
+We can use either managed Kubernetes services like AKS (Azure Kubernetes Service) or EKS (Amazon Elastic Kubernetes Service), or self-managed Kubernetes clusters like those created with kubeadm. In this workshop, we will use AKS.
 
-We will create aks VNET and Fortiweb VNET in same resourceGroup, in reality, you can also create them in different resourceGroup. 
+We will create an AKS VNET and a FortiWeb VNET in the same resource group. In a real-world scenario, you can also create them in different resource groups.
+
 
 **create aks VNET and subnet**
 
@@ -125,11 +132,13 @@ az aks create \
 az aks get-credentials -g  $resourceGroupName -n ${aksClusterName} --overwrite-existing
 
 ```
+
 Check Creation result with 
 ```
 kubectl get node  -o wide
 ```
-you shall found node are in "ready" status and "VERSION" is v.1.28.9, the node shall have an internal ip assigned. 
+You should find that the nodes are in the "Ready" status and the "VERSION" is v1.28.9. Each node will have an internal IP address assigned.
+
 
 ```
 NAME                             STATUS   ROLES   AGE     VERSION   INTERNAL-IP   EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION      CONTAINER-RUNTIME
@@ -152,16 +161,18 @@ AKS-VNET  k8s51-k8s101-workshop  eastus      1             10.224.0.0/16        
 
 
 
-#### Deploy FortiWeb VM in dedicated VNET 
+#### Deploy FortiWeb VM in Dedicated VNET
 
-In this workshop, We are going to deploy FortiWeb VM in it's own VNET, FortiWeb will use twoarms or onearm  deployment model, below lists the components going to be deployed 
-- VNET : 10.0.0.0/16 
-- Subnet1: 10.0.1.0/24
-- Subnet2: 10.0.2.0/24 when fortiweb in twoarms mode
-- NSG : allow all traffic 
-- NIC1 with Public IP for SSH access and Management, in Subnet1
-- NIC2 for internal traffic, in Subnet2, when fortiweb in twoarms mode
-- VM with Extra DISK for log
+In this workshop, we are going to deploy a FortiWeb VM in its own VNET. FortiWeb can use either the two-arms or one-arm deployment model. Below are the components that will be deployed:
+
+- **VNET**: 10.0.0.0/16
+- **Subnet1**: 10.0.1.0/24
+- **Subnet2**: 10.0.2.0/24 (only in two-arms mode)
+- **NSG**: Allow all traffic
+- **NIC1**: With Public IP for SSH access and management, in Subnet1
+- **NIC2**: For internal traffic, in Subnet2 (only in two-arms mode)
+- **VM**: With an extra disk for logs
+
 
 **Create VNET with Subnet1**
 
@@ -211,9 +222,10 @@ az network nsg rule create \
 
 **Create PublicIP with a DNS name**
 
-this publicip serve for mgmt purpose, we can use this ip for SSH and WebGUI to Fortiweb VM via IP address or DNS name
+This public IP serves management purposes, allowing SSH and WebGUI access to the FortiWeb VM via IP address or DNS name.
 
-the Fortiweb factory default configuration only have SSH service and WebGUI service enabled on Port1. so this Public IP will be associated to Fortiweb VM Port1. 
+The FortiWeb factory default configuration enables only the SSH and WebGUI services on Port1. Therefore, this public IP will be associated with Port1 of the FortiWeb VM.
+
 
 ```bash
 az network public-ip create \
@@ -286,8 +298,8 @@ az vm create \
   --location $location \
   --public-ip-address-dns-name $fortiwebvmdnslabel \
   --data-disk-sizes-gb 30 \
-  --ssh-key-values @~/.ssh/${rsakeyname}.pub \
-  --only-show-errors
+  --ssh-key-values @~/.ssh/${rsakeyname}.pub 
+
 ```
 you shall see output like this  if fortiweb in twoarms mode
 
@@ -305,6 +317,23 @@ you shall see output like this  if fortiweb in twoarms mode
 }
 
 ```
+or  in onearm mode
+
+```
+{
+  "fqdns": "k8s51fortiwebvm7.eastus.cloudapp.azure.com",
+  "id": "/subscriptions/02b50049-c444-416f-a126-3e4c815501ac/resourceGroups/k8s51-k8s101-workshop/providers/Microsoft.Compute/virtualMachines/MyFortiWebVM",
+  "location": "eastus",
+  "macAddress": "00-0D-3A-15-33-90",
+  "powerState": "VM running",
+  "privateIpAddress": "10.0.1.4",
+  "publicIpAddress": "20.168.210.116",
+  "resourceGroup": "k8s51-k8s101-workshop",
+  "zones": ""
+}
+
+```
+
 
 **Check all the resource you created**
 
@@ -344,11 +373,14 @@ ssh -o "StrictHostKeyChecking=no" azureuser@$vm_name -i $HOME/.ssh/$rsakeyname "
 
 #### Create VNET Peering
 
-Because AKS and Fortiweb are in different VNET, they are isolated each other, we are going to use VNET Peering to connect Fortiweb VM with AKS workernode, to do that, we need to get the both side vnetId for create peering. 
+Because AKS and FortiWeb are in different VNETs, they are isolated from each other. We will use VNET peering to connect the FortiWeb VM with the AKS worker nodes. To do this, we need to obtain the VNET IDs for both sides to create the peering.
+
 
 **define localPeer name and RemotePeer name **
 
 ```bash
+echo Fortiweb Vnet name : $vnetName
+echo AKS Vnet name: $aksVnetName
 localPeeringName="FortiWebToAksPeering"
 remotePeeringName="AksToFortiWebPeering"
 ```
@@ -357,6 +389,7 @@ remotePeeringName="AksToFortiWebPeering"
 
 ```bash
 localVnetId=$(az network vnet show --resource-group $resourceGroupName --name $vnetName --query "id" -o tsv)
+echo $localVnetId
 ```
 
 **Get the full resource ID of the remote VNet**
@@ -364,6 +397,17 @@ localVnetId=$(az network vnet show --resource-group $resourceGroupName --name $v
 ```bash
 remoteVnetId=$(az network vnet show  --resource-group $resourceGroupName --name $aksVnetName  --query "id" -o tsv)
 echo $remoteVnetId
+```
+
+**Create peering from remote VNet to local VNet**
+
+```bash
+az network vnet peering create \
+  --name $remotePeeringName \
+  --resource-group $resourceGroupName \
+  --vnet-name $aksVnetName \
+  --remote-vnet $localVnetId \
+  --allow-vnet-access
 ```
 
 **Create peering from local VNet to remote VNet**
@@ -377,16 +421,6 @@ az network vnet peering create \
   --allow-vnet-access
 ```
 
-**Create peering from remote VNet to local VNet**
-
-```bash
-az network vnet peering create \
-  --name $remotePeeringName \
-  --resource-group $resourceGroupName \
-  --vnet-name $aksVnetName \
-  --remote-vnet $localVnetId \
-  --allow-vnet-access
-```
 **Check vnet peering status**
 
 ```bash
@@ -514,7 +548,9 @@ ssh -o "StrictHostKeyChecking=no" azureuser@$vm_name  -i  ~/.ssh/$rsakeyname sho
 
 #### SSH into fortiweb via internal ip
 
-you may lost connectivity to Fortiweb Public IP for SSH if your client ip subnet is not in fortiweb static route config. then you can use Fortiweb internal IP for ssh, we can create a ssh client pod to connect to Fortiweb via internal ip.
+
+In two-arms mode, you may lose connectivity to the FortiWeb public IP for SSH if your client IP subnet is not included in the FortiWeb static route configuration. In this case, you can use the FortiWeb internal IP for SSH access. We can create an SSH client pod to connect to FortiWeb via its internal IP.
+
 
 ```bash
 
@@ -1002,7 +1038,7 @@ kubectl exec -it po/clientpod -- curl -v -H "Host: $svcdnsname" http://$secondar
 you shall get the response from backend server like this , which indicate you do not have Token for use gemini yet.
 
 Access ingress service via external public ip or dns name
-
+wait a few seconds , then 
 ```bash
 kubectl exec -it po/clientpod -- curl http://$svcdnsname/info 
 ```
@@ -1034,6 +1070,10 @@ az disk delete --name $disk --resource-group $resourceGroupName
 done
 echo delete NSG
 az network nsg delete --name MyNSG --resource-group $resourceGroupName
+echo delete vnet peering
+az network vnet peering delete -n $remotePeeringName --vnet-name $aksVnetName -g $resourceGroupName
+az network vnet peering delete -n $localPeeringName --vnet-name $vnetName -g $resourceGroupName
+
 echo delete vnet
 az network vnet delete --name $vnetName -g $resourceGroupName
 az network vnet delete --name aksvnet -g $resourceGroupName

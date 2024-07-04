@@ -18,13 +18,13 @@ Fortiweb can also be configured with a single port, where port1 handles both inc
 ![Fortiweb with single port](../images/fortiwebonearm.png)
 
 
-In this workshop, you can choose to use twoarms mode or onearm mode.
+In this workshop, please use default onearm mode. 
 
 #### Prepare Environemnt Variables
 
 
 ```bash
-read -p "Enter deploy mode (twoarms/onearm) [twoarms]: " fortiwebdeploymode
+read -p "Enter deploy mode (twoarms/onearm) [onearm]: " fortiwebdeploymode
 fortiwebdeploymode=${fortiwebdeploymode:-twoarms}
 echo $fortiwebdeploymode 
 if [ "$fortiwebdeploymode" == "twoarms" ]; then
@@ -34,7 +34,8 @@ else
 fi
 owner="tecworkshop"
 currentUser=$(az account show --query user.name -o tsv)
-resourceGroupName=$(az group list --query "[?tags.UserPrincipalName=='$currentUser'].name" -o tsv)
+resourceGroupName=$(az group list --query "[?contains(name, '$(whoami)') && contains(name, 'workshop')].name" -o tsv)
+#resourceGroupName=$(az group list --query "[?tags.UserPrincipalName=='$currentUser'].name" -o tsv)
 if [ -z "$resourceGroupName" ]; then
     resourceGroupName=$owner-$(whoami)-"fortiweb-"$location-$(date -I)
     az group create --name $resourceGroupName --tags UserPrincipalName=$currentUser --location $location
@@ -59,6 +60,7 @@ svcdnsname="$(whoami)px2.${location}.cloudapp.azure.com"
 remoteResourceGroup="MC"_${resourceGroupName}_$(whoami)-aks-cluster_${location} 
 nicName1="NIC1"
 nicName2="NIC2"
+alias k=kubectl
 EOF
 echo fortiwebdeploymode=$fortiwebdeploymode >> $HOME/variable.sh
 echo secondaryIp=$secondaryIp >> $HOME/variable.sh
@@ -510,6 +512,43 @@ you can ssh into Fortiweb to check configuration like static route etc.,
 ssh -o "StrictHostKeyChecking=no" azureuser@$vm_name  -i  ~/.ssh/$rsakeyname show router static
 ```
 
+#### SSH into fortiweb via internal ip
+
+you may lost connectivity to Fortiweb Public IP for SSH if your client ip subnet is not in fortiweb static route config. then you can use Fortiweb internal IP for ssh, we can create a ssh client pod to connect to Fortiweb via internal ip.
+
+```bash
+
+cat << EOF | tee sshclient.yaml 
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ssh-jump-host
+  labels:
+    app: ssh-jump-host
+spec:
+  containers:
+  - name: ssh-client
+    image: alpine
+    command: ["/bin/sh"]
+    args: ["-c", "apk add --no-cache openssh && apk add --no-cache curl && tail -f /dev/null"]
+    stdin: true
+    tty: true
+EOF
+
+kubectl apply -f sshclient.yaml
+
+```
+then
+
+```bash
+nic1privateip=$(az network nic show --name NIC1 -g k8s51-k8s101-workshop --query "ipConfigurations[0].privateIPAddress" --output tsv)
+echo $nic1privateip
+echo username $fortiwebUsername
+echo password $fortiwebPassword
+kubectl exec -it po/ssh-jump-host -- ssh $fortiwebUsername@$nic1privateip
+
+```
+
 #### Use Helm to deploy Fortiweb Ingress controller
 
 **What is Helm**
@@ -886,9 +925,10 @@ Content-Length: 20
 
 ```
 
-### create NIC2 secondary ip and associate with public ip
+### create secondary ip and associate with public ip
 
-This is to create an IP for use it as VIP on fortiweb and associate with a public ip for external access when run fortiweb with twoarms mode.
+
+This is to create an IP for use it as VIP on fortiweb and associate with a public ip for external access,  when run fortiweb with twoarms mode the secondary ip is on NIC2 , when in onearm mode, the secondary ip is on NIC1. 
  
 
 ```bash
@@ -923,6 +963,8 @@ az network nic show \
   --output table
 ``` 
 you shall see output like 
+
+in twoarms mode
 ```
 Name               Primary    PrivateIPAddress    PrivateIPAddressVersion    PrivateIPAllocationMethod    ProvisioningState    ResourceGroup
 -----------------  ---------  ------------------  -------------------------  ---------------------------  -------------------  ---------------------
@@ -930,9 +972,17 @@ ipconfig1          True       10.0.2.4            IPv4                       Dyn
 ipconfigSecondary  False      10.0.2.100          IPv4                       Static                       Succeeded            k8s51-k8s101-workshop
 
 ```
+in onearm mode
+```
+Name               Primary    PrivateIPAddress    PrivateIPAddressVersion    PrivateIPAllocationMethod    ProvisioningState    ResourceGroup
+-----------------  ---------  ------------------  -------------------------  ---------------------------  -------------------  ---------------------
+ipconfig1          True       10.0.1.4            IPv4                       Dynamic                      Succeeded            k8s51-k8s101-workshop
+ipconfigSecondary  False      10.0.1.100          IPv4                       Static                       Succeeded            k8s51-k8s101-workshop
+
+```
 
 Verify connectivity to Fortiweb VIP
-FortiWeb has VIP configured which it's an alias of NIC2 interface. from client pod, you shall able to ping it.
+FortiWeb has VIP configured which it's an alias of NIC2 interface(in twoarms mode) or NIC1 (in onearm mode). from client pod, you shall able to ping it.
 
 
 ```bash

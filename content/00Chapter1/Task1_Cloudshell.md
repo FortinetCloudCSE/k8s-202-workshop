@@ -9,8 +9,8 @@ weight: 2
 
 * Login to Azure Cloud Portal [https://portal.azure.com/](https://portal.azure.com/) with the provided login/password
 
-    ![cloudshell1](../../images/cloudshell-01.jpg)
-    ![cloudshell2](../../images/cloudshell-02.jpg)
+    ![cloudshell1](../images/cloudshell-01.jpg)
+    ![cloudshell2](../images/cloudshell-02.jpg)
 
 * Click the link "Skip for now (14 days until this is required)" do not click the "Next" button
 

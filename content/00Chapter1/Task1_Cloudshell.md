@@ -1,5 +1,6 @@
 ---
 title: "Setup Azure CloudShell"
+menuTitle: "Setup Azure CloudShell"
 weight: 2
 ---
 

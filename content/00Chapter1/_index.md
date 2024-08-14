@@ -1,7 +1,10 @@
 ---
-title: "Chapter 1 - Quickstart"
-weight: 1
+title: "Ch 1 - Getting Started"
+chapter: false
+menuTitle: "Ch 1: Getting Started"
+weight: 5
 ---
+
 
 #### Provisioning the Azure environment (40min)
 

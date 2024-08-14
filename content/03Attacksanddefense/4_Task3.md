@@ -22,7 +22,7 @@ key uses of URL rewriting on FortiWeb:
 - Consistent URL Structure: Ensures uniformity in URL formatting across the website, which aids in site maintenance and improves the overall user experience.
 
 
-Task:
+##### Task1 - Rewriting Policy:
 
 Lets create a rewriting policy to rewrite from Service1 to Juiceshop application.
 
@@ -30,7 +30,7 @@ Lets create a rewriting policy to rewrite from Service1 to Juiceshop application
 
 Click create new.
 
-Set:
+**Set:**
 
 - **Action type**: Request Action
 - **Request Action**: Redirect (31 Permanently)
@@ -39,7 +39,7 @@ Set:
 
 - Click create new
 
-Set:
+**Set:**
 
 - **HTTP HOST**: your FQDN  
 
@@ -55,17 +55,17 @@ Set:
 
 Finally it looks like below: 
 
-![juiceshop60](../images/uclcr.png)
+![juiceshop60](../images/urlcr.png)
 
 2. Lets create a URL rewriting policy by giving a name.
 
-click create new and select the Rule we have create in previous step from the drop down. 
+- click create new and select the Rule we have create in previous step from the drop down. 
 
 ![juiceshop61](../images/rewrite.png)
 
 ![juiceshop62](../images/hostrewrite1.png)
 
-Finally it looks like below:
+- Finally it looks like below:
 
 ![juiceshop63](../images/finalpolicy.png)
 
@@ -73,12 +73,12 @@ Finally it looks like below:
 
 ![juiceshop64](../images/rewriteprofile.png)
 
-Click OK.
+- Click OK.
 
 4. Now when we input https://**<FQDN>**/info in the browser, it will now redirect to juiceshop application automatically. 
 
 
-### DOS protection/Rate limiting:
+#### Task 2 - DOS protection/Rate limiting:
 
 1. To create a DOS rate limiting policy on Fortiweb > DOS protection > HTTP Access limit > Create new
 

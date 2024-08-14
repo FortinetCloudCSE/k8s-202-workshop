@@ -57,7 +57,7 @@ EOF
 
 example: 
 
-https://k8s52fortiwebvm7.eastus.cloudapp.azure.com
+https://srijapx2.westus.cloudapp.azure.com
 
 - Login with username and password from above output. 
 
@@ -170,13 +170,13 @@ EOF
 output:
 
 ```bash
-k8s52px2.eastus.cloudapp.azure.com/info
+srijapx2.eastus.cloudapp.azure.com/info
 EOF
 ```
 
-12. In the browser: https://**<FQDN>**/info
+12. In the browser: https://**FQDN**/info
 
-example: https://k8s52px2.eastus.cloudapp.azure.com/info
+example: https://srijapx2.westus.cloudapp.azure.com/info
 
 
 ![image4](../images/cert.png)

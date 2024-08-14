@@ -69,7 +69,6 @@ example:
 
 ```bash
 "https://srijapx2.westus.cloudapp.azure.com/rest/products/search?q=<script>$('input').value="';DELETE FROM USERS;--";$('form').submit()</script>"
-EOF
 ```
 
 We will see block page again but find out from the attack log what attack this is. 

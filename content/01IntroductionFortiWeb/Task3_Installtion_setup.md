@@ -1006,7 +1006,7 @@ Access ingress service via external public ip or dns name
 kubectl exec -it po/clientpod -- curl http://$svcdnsname/info 
 ```
 
- #### 15. Clean up
+ #### 15. Clean up: ONLY IF YOU WANT TO START OVER AGAIN
 
 - **delete all resource**
 

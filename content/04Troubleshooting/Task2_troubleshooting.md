@@ -5,7 +5,7 @@ chapter: false
 weight: 20
 ---
 
-Diagnosing Network Connectivity Issues
+##### Diagnosing Network Connectivity Issues
 
 One of your first tests when configuring a new policy should be to determine whether allowed traffic is flowing to
 your web servers.
@@ -31,7 +31,7 @@ system dashboard.
 
 example: **diagnose network sniffer any "port 8443" 4 0  -a**
 
-To ping a device from the FortiWeb CLI:
+##### To ping a device from the FortiWeb CLI:
 
 1. Log in to the CLI via either SSH, Telnet, or you can ping from the FortiWeb appliance in the CLI Console
 accessed from the web UI.
@@ -76,7 +76,7 @@ EOF
 
 “100% packet loss” and “Timeout” indicates that the host is not reachable.
 
-For kubernetes ingress controller:
+##### For kubernetes ingress controller:
 
 1. From the cluster check the ingress controller pod logs in namepsace to see if there are any errors.
 

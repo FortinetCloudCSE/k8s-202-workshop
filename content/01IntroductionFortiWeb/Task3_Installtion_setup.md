@@ -20,8 +20,6 @@ Fortiweb can also be configured with a single port, where port1 handles both inc
 
 In this workshop, please use default onearm mode. 
 
-{{% expand title="**1: Prepare Environment Variables...**" %}}
-
 #### 1. Prepare Environment Variables
 
 
@@ -78,7 +76,6 @@ if [ -f $HOME/.ssh/known_hosts ]; then
 grep -qxF "$vm_name" "$HOME/.ssh/known_hosts"  && ssh-keygen -R "$vm_name"
 fi
 ```
-{{% /expand }}
 
 #### 2. Create Kubernetes Cluster
 

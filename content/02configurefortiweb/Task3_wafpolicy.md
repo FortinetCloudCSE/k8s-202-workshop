@@ -156,6 +156,7 @@ output:
 
 ```bash
 ingress.networking.k8s.io/m created
+EOF
 ```
 
 10. on fortiweb, there will be now a Server policy with Certificate, Web protection profile we created in Step1. 
@@ -169,12 +170,13 @@ ingress.networking.k8s.io/m created
 output:
 
 ```bash
-srijapx2.eastus.cloudapp.azure.com/info
+k8s52px2.eastus.cloudapp.azure.com/info
+EOF
 ```
 
 12. In the browser: https://**<FQDN>**/info
 
-example: https://srijapx2.eastus.cloudapp.azure.com/info
+example: https://k8s52px2.eastus.cloudapp.azure.com/info
 
 
 ![image4](../images/cert.png)

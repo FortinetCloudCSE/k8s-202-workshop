@@ -6,13 +6,11 @@ weight: 10
 
 ### What is FortiWeb 
 
-# Introduction
-
 **FortiWeb** is a web application firewall (WAF) that protects hosted web applications from attacks targeting known and unknown exploits. Using multi-layered and correlated detection methods, FortiWeb defends applications from known vulnerabilities and zero-day threats. The **Web Application Security Service** from FortiGuard Labs utilizes information based on the latest application vulnerabilities, bots, suspicious URL and data patterns, and specialized heuristic detection engines to keep your applications safe.
 
 FortiWeb also offers a machine-learning function that enables it to automatically detect malicious web traffic. In addition to detecting known attacks, the feature can detect potential unknown zero-day attacks to provide real-time protection for web servers.
 
-## Configurable Features
+### Configurable Features
 
 FortiWeb allows you to configure these features:
 
@@ -25,7 +23,7 @@ FortiWeb allows you to configure these features:
 
 FortiWeb hardware and virtual machine platforms are available for medium and large enterprises, as well as for service providers.
 
-## Benefits
+### Benefits
 
 FortiWeb is designed specifically to protect web servers. It provides specialized application layer threat detection and protection for HTTP and HTTPS services, including:
 
@@ -46,7 +44,7 @@ FortiWeb’s HTTP firewall and denial-of-service (DoS) attack-prevention protect
 
 FortiWeb provides the tools you need to monitor and enforce government regulations, industry best practices, and internal security policies, including firewalling and patching requirements from [PCI DSS](https://www.pcisecuritystandards.org/security_standards/getting_started.php).
 
-## Features
+### Features
 
 FortiWeb’s application-aware firewall and load balancing engine can:
 

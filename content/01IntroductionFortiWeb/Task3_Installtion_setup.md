@@ -172,7 +172,9 @@ az network vnet create \
   --subnet-name ExternalSubnet \
   --subnet-prefix 10.0.1.0/24
 ```
-- **RUN ONLY IF TWO ARM MODE: Create Subnet2 in same VNET if use twoarms mode**
+- **Create Subnet2 in same VNET if use twoarms mode**
+
+{{% notice warning %}} This is only for Two arm mode, if one arm mode dont run the below commands {{% /notice %}}
 
 ```bash
 if [ "$fortiwebdeploymode" == "twoarms" ]; then 
@@ -243,7 +245,9 @@ az network nic update \
 
 ```
 
-- **ONLY IF TWO ARM MODE: Create NIC2 if Fortiweb use twoarms mode**
+- **Create NIC2 if Fortiweb use twoarms mode**
+
+{{% notice warning %}} This is only for Two arm mode, if one arm mode dont run the below commands {{% /notice %}}
 
 ```bash
 if [ "$fortiwebdeploymode" == "twoarms" ]; then 
@@ -1006,7 +1010,9 @@ Access ingress service via external public ip or dns name
 kubectl exec -it po/clientpod -- curl http://$svcdnsname/info 
 ```
 
- #### 15. Clean up: ONLY IF YOU WANT TO START OVER AGAIN
+ #### 15. Clean up: 
+
+ {{% notice warning %}} Only run this step if you want to start over the deployment, if not please continue to next section. {{% /notice %}}
 
 - **delete all resource**
 

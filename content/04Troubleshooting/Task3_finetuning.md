@@ -1,6 +1,6 @@
 ---
 title: "Finetuning"
-menuTitle: "finetuning"
+linkTitle: "finetuning"
 chapter: false
 weight: 30
 ---

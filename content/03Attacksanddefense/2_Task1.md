@@ -1,6 +1,6 @@
 ---
 title: "Attack"
-menuTitle: "Attack"
+linkTitle: "Attack"
 weight: 10
 ---
 

@@ -1,0 +1,36 @@
+{
+  "repoName":"K8s-202-workshop",
+  "author":"Srija Reddy Allam",
+  "workshopTitle":"K8s 202 Workshop",
+  "themeVariant":"Xperts2024",
+  "logoBannerText":"K8s 202 Workshop",
+  "logoBannerSubText":"FortiWeb Cloud",
+  "errorLevel":"warning",
+  "googleServicesID":"G-5RZBH288ST",
+  "shortcuts": [
+  {
+    "text": "K8s 101 workshop",
+    "URL": "https://fortinetcloudcse.github.io/k8s-101-workshop/",
+    "icon": "fa-tools-cap",
+    "weight":10
+  },
+  {
+    "text": "Kubernetes Admin Guide",
+    "URL": "https://kubernetes.io/docs/concepts/",
+    "icon": "fa-tools-cap",
+    "weight":20
+  },
+  {
+    "text": "Kubectl reference",
+    "URL": "https://kubernetes.io/docs/reference/kubectl/quick-reference/",
+    "icon": "fa-tools-cap",
+    "weight":30
+  },
+  {
+    "text": "Container FortiOS",
+    "URL": "https://docs.fortinet.com/product/container-fortios/7.2",
+    "icon": "fa-tools-cap",
+    "weight":40
+  }
+  ]
+}

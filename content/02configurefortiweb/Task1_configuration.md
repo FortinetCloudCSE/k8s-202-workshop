@@ -1,6 +1,6 @@
 ---
 title: "routing and load balancing"
-menuTitle: "Routing and Load balancing"
+linkTitle: "Routing and Load balancing"
 weight: 10
 ---
 

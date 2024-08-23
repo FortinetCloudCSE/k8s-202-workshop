@@ -1,6 +1,6 @@
 ---
 title: "Introduction to Kubernetes Ingress Controllers and FortiWeb Integration"
-menuTitle: "FortiWeb Ingress Controller"
+linkTitle: "FortiWeb Ingress Controller"
 weight: 20
 ---
 

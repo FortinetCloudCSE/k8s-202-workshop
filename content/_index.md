@@ -1,6 +1,6 @@
 ---
 title: "Fortinet TECWorkshop 202"
-menuTitle: "Fortiweb workshop"
+linkTitle: "Fortiweb workshop"
 weight: 1
 archetype: home
 ---

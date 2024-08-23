@@ -1,6 +1,6 @@
 ---
 title: "Security and WAF policies"
-menuTitle: "WAF policy"
+linkTitle: "WAF policy"
 weight: 30
 ---
 

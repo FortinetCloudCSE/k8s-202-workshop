@@ -1,6 +1,6 @@
 ---
 title: "Sql injection"
-menuTitle: "SQL injection"
+linkTitle: "SQL injection"
 weight: 10
 ---
 

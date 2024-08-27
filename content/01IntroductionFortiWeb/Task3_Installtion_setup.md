@@ -539,7 +539,7 @@ kubectl apply -f sshclient.yaml
 then
 
 ```bash
-nic1privateip=$(az network nic show --name NIC1 -g k8s51-k8s101-workshop --query "ipConfigurations[0].privateIPAddress" --output tsv)
+nic1privateip=$(az network nic show --name NIC1 -g $resourceGroupName  --query "ipConfigurations[0].privateIPAddress" --output tsv)
 echo $nic1privateip
 echo username $fortiwebUsername
 echo password $fortiwebPassword

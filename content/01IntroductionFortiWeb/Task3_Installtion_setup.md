@@ -25,7 +25,7 @@ In this workshop, please use default onearm mode.
 
 ```bash
 read -p "Enter deploy mode (twoarms/onearm) [onearm]: " fortiwebdeploymode
-fortiwebdeploymode=${fortiwebdeploymode:-twoarms}
+fortiwebdeploymode=${fortiwebdeploymode:-onearm}
 echo $fortiwebdeploymode 
 if [ "$fortiwebdeploymode" == "twoarms" ]; then
     secondaryIp="10.0.2.100"

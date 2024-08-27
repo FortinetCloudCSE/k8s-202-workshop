@@ -1037,7 +1037,7 @@ echo delete NSG
 az network nsg delete --name MyNSG --resource-group $resourceGroupName
 echo delete vnet
 az network vnet delete --name $vnetName -g $resourceGroupName
-az network vnet delete --name aksvnet -g $resourceGroupName
+az network vnet delete --name $aksVnetName -g $resourceGroupName
 az resource list  -g $resourceGroupName -o table 
 rm ~/.kube/config
 ssh-keygen -R $vm_name

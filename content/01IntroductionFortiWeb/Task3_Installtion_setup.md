@@ -627,6 +627,7 @@ We will deploy two service and expose with ClusterIP SVC , service1 and service2
 
 - **deploy service1**
 ```bash
+imageRepo="public.ecr.aws/t8s9q7q9/andy2024public"
 cat << EOF | tee > service1.yaml
 ---
 apiVersion: apps/v1
@@ -645,7 +646,7 @@ spec:
     spec:
       containers:
       - name: sise
-        image: interbeing/myfmg:demogeminiclient0.5.0
+        image: $imageRepo:demogeminiclient0.5.0
         imagePullPolicy: Always
         env: 
           - name: PORT
@@ -676,6 +677,7 @@ kubectl rollout status deployment sise
 ```
 - **deploy service2**
 ```bash
+imageRepo="public.ecr.aws/t8s9q7q9/andy2024public"
 cat << EOF | tee > service2.yaml
 ---
 apiVersion: apps/v1
@@ -694,7 +696,7 @@ spec:
     spec:
       containers:
       - name: goweb
-        image: interbeing/myfmg:demogeminiclient0.5.0
+        image: $imageRepo:demogeminiclient0.5.0
         imagePullPolicy: Always
         env: 
           - name: PORT

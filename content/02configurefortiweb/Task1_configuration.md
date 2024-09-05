@@ -25,45 +25,45 @@ For example, if a web server is directly attached to one physical port on the Fo
 
 Fortiweb supports multiple load balancing algortihms. 
 
-- Round Robin—Distributes new TCP connections to the next pool member, regardless of weight, response time, traffic load, or number of existing connections. FortiWeb avoids unresponsive servers.
+- **Round Robin:** Distributes new TCP connections to the next pool member, regardless of weight, response time, traffic load, or number of existing connections. FortiWeb avoids unresponsive servers.
 
-Suppose you have three servers in your pool: Server1, Server2, and Server3. New TCP connections are distributed in the following order: Server1, then Server2, then Server3, and it repeats in this cycle.
+    Suppose you have three servers in your pool: Server1, Server2, and Server3. New TCP connections are distributed in the following order: Server1, then Server2, then Server3, and it repeats in this cycle.
 
-- Weighted Round Robin—Distributes new TCP connections using the round-robin method, except that members with a higher weight value receive a larger percentage of connections.
+- **Weighted Round Robin:** Distributes new TCP connections using the round-robin method, except that members with a higher weight value receive a larger percentage of connections.
 
-If Server1 has a weight of 3, Server2 a weight of 1, and Server3 a weight of 2, the distribution of connections might look like: Server1, Server1, Server1, Server2, Server3, Server3, and then it repeats. Server1 gets more connections due to its higher weight.
-
-
-- Least Connection: Distributes new TCP connections to the member with the fewest number of existing, fully-formed TCP connections. If there are multiple servers with the same least number of connections, FortiWeb will take turns and avoid always selecting the same member to distribute new connections.
-
-If Server1 has 10 connections, Server2 has 5 connections, and Server3 has 5 connections, the next new connection will be sent to either Server2 or Server3, whichever has fewer active connections.
-
-- URI Hash—Distributes new TCP connections using a hash algorithm based on the URI found in the HTTP header, excluding hostname.
-
-A hash function is applied to the URI in the HTTP header (excluding the hostname). Suppose the URI "/api/data" consistently hashes to Server1, then all requests to "/api/data" will always be directed to Server1.
+    If Server1 has a weight of 3, Server2 a weight of 1, and Server3 a weight of 2, the distribution of connections might look like: Server1, Server1, Server1, Server2, Server3, Server3, and then it repeats. Server1 gets more connections due to its higher weight.
 
 
-- Full URI Hash: Distributes new TCP connections using a hash algorithm based on the full URI string found in the HTTP header. The full URI string includes the hostname and path.
+- **Least Connection:** Distributes new TCP connections to the member with the fewest number of existing, fully-formed TCP connections. If there are multiple servers with the same least number of connections, FortiWeb will take turns and avoid always selecting the same member to distribute new connections.
 
-Similar to URI Hash, but the hash function is applied to the entire URI, including the hostname. For instance, requests to "http://example.com/api/data" might hash to Server2.
+    If Server1 has 10 connections, Server2 has 5 connections, and Server3 has 5 connections, the next new connection will be sent to either Server2 or Server3, whichever has fewer active connections.
 
-- Host Hash: Distributes new TCP connections using a hash algorithm based on the hostname in the HTTP Request header Host field.
+- **URI Hash:** Distributes new TCP connections using a hash algorithm based on the URI found in the HTTP header, excluding hostname.
 
-This method applies a hash to the hostname found in the HTTP request's Host field. If requests come with "host1.example.com", and the hash points to Server3, all requests to "host1.example.com" will be directed to Server3.
-
-- Host Domain Hash:Distributes new TCP connections using a hash algorithm based on the domain name in the HTTP Request header Host field.
-
-A hash function is applied to the domain name in the Host field. For example, requests to any subdomain of "example.com" might consistently hash to Server1 based on the domain name.
-
-- Source IP Hash: Distributes new TCP connections using a hash algorithm based on the source IP address of the request.
-
-A hash function is applied to the source IP address of incoming requests. If the IP address 192.168.1.100 hashes to Server2, all requests from this IP will be directed to Server2.
+    A hash function is applied to the URI in the HTTP header (excluding the hostname). Suppose the URI "/api/data" consistently hashes to Server1, then all requests to "/api/data" will always be directed to Server1.
 
 
-- Least Response Time: Distributes incoming traffic to the back-end servers by multiplying average response time by the number of concurrent connections. Servers with the lowest value will get the traffic. In this way the client can connect to the most efficient back-end server.
+- **Full URI Hash:** Distributes new TCP connections using a hash algorithm based on the full URI string found in the HTTP header. The full URI string includes the hostname and path.
 
-Suppose the average response times are 20 ms for Server1, 30 ms for Server2, and 15 ms for Server3, with all having similar connection numbers. The next connection will be directed to Server3 due to its lowest response time.
+    Similar to URI Hash, but the hash function is applied to the entire URI, including the hostname. For instance, requests to "http://example.com/api/data" might hash to Server2.
 
-- Probabilistic Weighted Least Response Time: For the Least Response Time, in extreme cases there might be a server consistently has relatively low response time compared to others, which causes most of traffic to be distributed to one server. As a solution to this case, Probabilistic Weighted Least Response Time distributes traffic based on least response time as well as probabilities. The least response time server is most likely to receive traffic, while the rest servers still have chance to process some of the traffic.
+- **Host Hash:** Distributes new TCP connections using a hash algorithm based on the hostname in the HTTP Request header Host field.
 
-Using the previous example, if Server3 begins to receive a disproportionate amount of traffic, reducing its performance, this method might adjust probabilities such that Server1 and Server2 start to receive more connections to balance the load, even though Server3 still has the best average response time.
+    This method applies a hash to the hostname found in the HTTP request's Host field. If requests come with "host1.example.com", and the hash points to Server3, all requests to "host1.example.com" will be directed to Server3.
+
+- **Host Domain Hash:** Distributes new TCP connections using a hash algorithm based on the domain name in the HTTP Request header Host field.
+
+    A hash function is applied to the domain name in the Host field. For example, requests to any subdomain of "example.com" might consistently hash to Server1 based on the domain name.
+
+- **Source IP Hash:** Distributes new TCP connections using a hash algorithm based on the source IP address of the request.
+
+    A hash function is applied to the source IP address of incoming requests. If the IP address 192.168.1.100 hashes to Server2, all requests from this IP will be directed to Server2.
+
+
+- **Least Response Time:** Distributes incoming traffic to the back-end servers by multiplying average response time by the number of concurrent connections. Servers with the lowest value will get the traffic. In this way the client can connect to the most efficient back-end server.
+
+    Suppose the average response times are 20 ms for Server1, 30 ms for Server2, and 15 ms for Server3, with all having similar connection numbers. The next connection will be directed to Server3 due to its lowest response time.
+
+- **Probabilistic Weighted Least Response Time:** For the Least Response Time, in extreme cases there might be a server consistently has relatively low response time compared to others, which causes most of traffic to be distributed to one server. As a solution to this case, Probabilistic Weighted Least Response Time distributes traffic based on least response time as well as probabilities. The least response time server is most likely to receive traffic, while the rest servers still have chance to process some of the traffic.
+
+    Using the previous example, if Server3 begins to receive a disproportionate amount of traffic, reducing its performance, this method might adjust probabilities such that Server1 and Server2 start to receive more connections to balance the load, even though Server3 still has the best average response time.

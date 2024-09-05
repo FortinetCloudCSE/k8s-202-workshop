@@ -1,6 +1,6 @@
 ---
 title: "Install and Setup FortiWeb Ingress Controller"
-menuTitle: "Installation and Setup"
+linkTitle: "Installation and Setup"
 weight: 30
 ---
 
@@ -25,7 +25,7 @@ In this workshop, please use default onearm mode.
 
 ```bash
 read -p "Enter deploy mode (twoarms/onearm) [onearm]: " fortiwebdeploymode
-fortiwebdeploymode=${fortiwebdeploymode:-twoarms}
+fortiwebdeploymode=${fortiwebdeploymode:-onearm}
 echo $fortiwebdeploymode 
 if [ "$fortiwebdeploymode" == "twoarms" ]; then
     secondaryIp="10.0.2.100"
@@ -543,7 +543,7 @@ kubectl apply -f sshclient.yaml
 then
 
 ```bash
-nic1privateip=$(az network nic show --name NIC1 -g k8s51-k8s101-workshop --query "ipConfigurations[0].privateIPAddress" --output tsv)
+nic1privateip=$(az network nic show --name NIC1 -g $resourceGroupName  --query "ipConfigurations[0].privateIPAddress" --output tsv)
 echo $nic1privateip
 echo username $fortiwebUsername
 echo password $fortiwebPassword
@@ -631,6 +631,7 @@ We will deploy two service and expose with ClusterIP SVC , service1 and service2
 
 - **deploy service1**
 ```bash
+imageRepo="public.ecr.aws/t8s9q7q9/andy2024public"
 cat << EOF | tee > service1.yaml
 ---
 apiVersion: apps/v1
@@ -649,7 +650,7 @@ spec:
     spec:
       containers:
       - name: sise
-        image: interbeing/myfmg:demogeminiclient0.5.0
+        image: $imageRepo:demogeminiclient0.5.0
         imagePullPolicy: Always
         env: 
           - name: PORT
@@ -680,6 +681,7 @@ kubectl rollout status deployment sise
 ```
 - **deploy service2**
 ```bash
+imageRepo="public.ecr.aws/t8s9q7q9/andy2024public"
 cat << EOF | tee > service2.yaml
 ---
 apiVersion: apps/v1
@@ -698,7 +700,7 @@ spec:
     spec:
       containers:
       - name: goweb
-        image: interbeing/myfmg:demogeminiclient0.5.0
+        image: $imageRepo:demogeminiclient0.5.0
         imagePullPolicy: Always
         env: 
           - name: PORT
@@ -1041,7 +1043,7 @@ echo delete NSG
 az network nsg delete --name MyNSG --resource-group $resourceGroupName
 echo delete vnet
 az network vnet delete --name $vnetName -g $resourceGroupName
-az network vnet delete --name aksvnet -g $resourceGroupName
+az network vnet delete --name $aksVnetName -g $resourceGroupName
 az resource list  -g $resourceGroupName -o table 
 rm ~/.kube/config
 ssh-keygen -R $vm_name

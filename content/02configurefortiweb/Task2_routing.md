@@ -1,6 +1,6 @@
 ---
 title: "K8s ingress types"
-menuTitle: "K8s ingress"
+linkTitle: "K8s ingress"
 weight: 20
 ---
 

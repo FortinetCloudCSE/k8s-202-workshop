@@ -1,6 +1,6 @@
 ---
 title: "Attack"
-menuTitle: "Attack"
+linkTitle: "Attack"
 weight: 10
 ---
 
@@ -60,18 +60,36 @@ kubectl apply -f juiceshopservice.yaml
 
 
 ```bash
+echo vm_name=$vm_name
+rsakeyname="id_rsa_tecworkshop"
+ssh-keygen -f "${HOME}/.ssh/known_hosts" -R "${vm_name}" 
+output=$(ssh -o "StrictHostKeyChecking=no" azureuser@$vm_name -i ~/.ssh/$rsakeyname 'get system interface')
+echo $output
+
+
+if [ "$fortiwebdeploymode" == "twoarms" ]; then
+    portName="port2" 
+else
+    portName="port1"
+fi 
+ 
+portip=$(echo "$output" | grep -A 7 "== \[ $portName \]" | grep "ip:" | awk '{print $2}' | cut -d'/' -f1)
+echo $portip
+
+portip_first3=$(echo "$portip" | cut -d'.' -f1-3)
+
 cat << EOF | tee > 08_tls-ingress.yaml 
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: m
   annotations: {
-    "fortiweb-ip" : $port1ip,    
+    "fortiweb-ip" : $portip,    
     "fortiweb-login" : "fwb-login1",  
     "fortiweb-ctrl-log" : "enable",
-    "virtual-server-ip" : $port1ip_first3.100, 
+    "virtual-server-ip" : $portip_first3.100, 
     "virtual-server-addr-type" : "ipv4",
-    "virtual-server-interface" : "port1",
+    "virtual-server-interface" : $portName,
     "server-policy-web-protection-profile" : "ingress tls profile",
     "server-policy-https-service" : "HTTPS",
     "server-policy-http-service" : "HTTP",

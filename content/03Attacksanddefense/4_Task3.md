@@ -1,6 +1,6 @@
 ---
 title: "URL rewriting"
-menuTitle: "URL rewriting"
+linkTitle: "URL rewriting"
 weight: 30
 ---
 

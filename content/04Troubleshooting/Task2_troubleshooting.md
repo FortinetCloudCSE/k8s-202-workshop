@@ -1,6 +1,6 @@
 ---
 title: "Troubleshooting"
-menuTitle: "Troubleshooting"
+linkTitle: "Troubleshooting"
 chapter: false
 weight: 20
 ---

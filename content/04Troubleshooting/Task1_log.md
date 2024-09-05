@@ -1,6 +1,6 @@
 ---
 title: "Attack and traffic log"
-menuTitle: "Attack and traffic log"
+linkTitle: "Attack and traffic log"
 chapter: false
 weight: 10
 ---

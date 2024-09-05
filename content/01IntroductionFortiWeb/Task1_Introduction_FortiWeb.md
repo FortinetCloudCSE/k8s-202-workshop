@@ -1,6 +1,6 @@
 ---
 title: "Introduction to FortiWeb and its functionalities"
-menuTitle: "FortiWeb and its functionalities"
+linkTitle: "FortiWeb and its functionalities"
 weight: 10
 ---
 

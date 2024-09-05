@@ -5,7 +5,7 @@ weight: 1
 archetype: home
 ---
 
-### Welcome to K8s 201 Workshop
+### Welcome to K8s 202 Workshop
 
 **Usecase/Goal of this lab:**
 

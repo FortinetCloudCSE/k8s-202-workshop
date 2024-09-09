@@ -1,6 +1,6 @@
 ---
 title: "Fortinet TECWorkshop 202"
-linkTitle: "Fortiweb workshop"
+linkTitle: "FortiWeb workshop"
 weight: 1
 archetype: home
 ---
@@ -19,8 +19,8 @@ Learning Objectives:
 - Deploy FortiWeb VM in Azure
 - Learn about Routing, Load balancing, Types of Ingress
 - Install and Setup Ingress controller 
-- Set up Web application protection polcy to do TLS based Ingress on Fortiweb
-- Generate Attack and Set up URL rewriting on Fortiweb
+- Set up Web application protection polcy to do TLS based Ingress on FortiWeb
+- Generate Attack and Set up URL rewriting on FortiWeb
 - Troubleshooting tips 
 
 **Lab Architecture**

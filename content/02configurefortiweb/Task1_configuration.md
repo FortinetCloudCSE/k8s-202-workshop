@@ -23,7 +23,7 @@ For example, if a web server is directly attached to one physical port on the Fo
 
 ### Loadbalancing:
 
-Fortiweb supports multiple load balancing algortihms. 
+FortiWeb supports multiple load balancing algortihms. 
 
 - Round Robin—Distributes new TCP connections to the next pool member, regardless of weight, response time, traffic load, or number of existing connections. FortiWeb avoids unresponsive servers.
 

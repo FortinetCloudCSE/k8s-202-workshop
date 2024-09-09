@@ -7,6 +7,9 @@ weight: 10
 
 Now lets create some attacks and defenses
 
+{{< tabs title="SETUP" >}}
+{{% tab title="Juiceshop" %}}
+
 1. For that lets create a deployment and Service for Juiceshop application. 
 
 ```bash
@@ -30,7 +33,8 @@ spec:
 EOF
 kubectl apply -f juiceshopdeployment.yaml
 ```
-
+{{% /tab %}}
+{{% tab title="expose the app" %}}
 
 
 2. Expose the application with a service.
@@ -55,6 +59,8 @@ EOF
 kubectl apply -f juiceshopservice.yaml
 ```
 
+{{% /tab %}}
+{{% tab title="ingress controller path" %}}
 
 3. Now lets add another path in ingress controller config to get to Juicehsop. Since its already deployed in the previous chapter, lets just update the 08_tls-ingress.yaml file and apply the config.
 
@@ -66,9 +72,9 @@ kind: Ingress
 metadata:
   name: m
   annotations: {
-    "fortiweb-ip" : $port1ip,    
-    "fortiweb-login" : "fwb-login1",  
-    "fortiweb-ctrl-log" : "enable",
+    "FortiWeb-ip" : $port1ip,    
+    "FortiWeb-login" : "fwb-login1",  
+    "FortiWeb-ctrl-log" : "enable",
     "virtual-server-ip" : $port1ip_first3.100, 
     "virtual-server-addr-type" : "ipv4",
     "virtual-server-interface" : "port1",
@@ -82,10 +88,10 @@ spec:
   ingressClassName: fwb-ingress-controller
   tls:
   - hosts: 
-     - $fortiwebvmdnslabelport2
+     - $FortiWebvmdnslabelport2
     secretName: tls-secret
   rules:
-  - host: $fortiwebvmdnslabelport2
+  - host: $FortiWebvmdnslabelport2
     http:
       paths:
       - path: /info
@@ -107,15 +113,19 @@ EOF
 ```
 
 This is will update and generate the **08_tls-ingress.yaml** file
+{{% /tab %}}
+{{% tab title="ingress networking" %}}
 
-4. Now lets run ```kubectl apply -f 08_tls-ingress.yaml```
+4. Now lets run
+```kubectl apply -f 08_tls-ingress.yaml```
 
 output:
 
 ```bash
 ingress.networking.k8s.io/m configured.
 ```
-
+{{% /tab %}}
+{{% tab title="ingress paths" %}}
 5. the ingress controller will now have two paths. we can check by running:
 
 ```kubectl get ingress```
@@ -147,9 +157,9 @@ Rules:
   srijapx2.westus.cloudapp.azure.com  
                                       /       juiceshop:80 (10.224.0.8:3000)
                                       /info   service1:1241 (10.224.0.14:9876)
-Annotations:                          fortiweb-ctrl-log: disable
-                                      fortiweb-ip: 10.0.1.4
-                                      fortiweb-login: fwb-login1
+Annotations:                          FortiWeb-ctrl-log: disable
+                                      FortiWeb-ip: 10.0.1.4
+                                      FortiWeb-login: fwb-login1
                                       server-policy-http-service: HTTP
                                       server-policy-http-to-https: disable
                                       server-policy-https-service: HTTPS
@@ -160,8 +170,14 @@ Annotations:                          fortiweb-ctrl-log: disable
                                       virtual-server-ip: 10.0.1.5
 Events:                               <none>
 ```
+{{% /tab %}}
+{{% tab title="browser" %}}
 
-6. In the web browser, if you try going to https://hostname/ it will redirect to juiceshop, https://hostname/info will redirect to service1.
+6. In the web browser:
+- if you try going to https://hostname/ 
+  - it will redirect to juiceshop, 
+- https://hostname/info 
+  - will redirect to service1.
 
 example: 
 
@@ -173,3 +189,5 @@ https://srijapx2.westus.cloudapp.azure.com/info
 
 ![juiceshop2](../images/service1.png)
 
+{{% /tab %}}
+{{< /tabs >}}

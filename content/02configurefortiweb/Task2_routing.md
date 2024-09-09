@@ -6,7 +6,7 @@ weight: 20
 
 Kubernetes Ingress is a vital component for managing access to applications running within a Kubernetes cluster from outside the cluster. It provides routing rules to manage external users' access to the services inside the cluster. Here’s a breakdown of different types of Kubernetes Ingress configurations:
 
-1. **Minimal Ingress**
+### 1. **Minimal Ingress**
 
 Minimal Ingress is the most straightforward type of Ingress. It's used primarily when you have a single service that needs to be exposed externally. The configuration directs all incoming traffic on the specified host to a single backend service.
 
@@ -30,7 +30,7 @@ EOF
 - This Ingress directs all traffic that does not match any other rule to the single-service at port 80.
 - Useful for simple applications or initial development stages when complex routing rules are not needed.
 
-2. **Simple fanout:**
+### 2. **Simple fanout:**
 
 A fanout configuration routes traffic to multiple services based on the URL path. for example, Used when hosting multiple services or APIs from the same IP address, directing users to different services based on the path.
 
@@ -69,7 +69,7 @@ EOF
 - Each service handles different parts of the application, allowing for modular and scalable design.
 
 
-3. **Ingress with Default backend**
+### 3. **Ingress with Default backend**
 
 This Ingress configuration includes both specific rules and a default backend to handle unmatched requests. for example,
 To manage traffic to specific services while ensuring that all other requests are caught by a default backend.
@@ -101,7 +101,7 @@ spec:
 EOF
 ```
 
-4. **TLS/SSL Termination**
+### 4. **TLS/SSL Termination**
 
 This type of Ingress handles encrypted traffic, decrypting requests before passing them on to the appropriate services.
 
@@ -135,7 +135,7 @@ EOF
 
 - Traffic to secure.example.com is handled with TLS, using the certificates stored in the Kubernetes secret example-tls.
 
-5. **ingress wildcard host**
+### 5. **ingress wildcard host**
 
 This configuration uses a wildcard host to match requests to any subdomain of a specified domain.
 
@@ -167,7 +167,7 @@ EOF
 Requests to any subdomain of example.com are routed to wildcard-service
 
 
-6. **default backend**
+### 6. **default backend**
 
 This Ingress configuration specifies a default backend. It is used when none of the rules in an Ingress resource match the incoming request.
 

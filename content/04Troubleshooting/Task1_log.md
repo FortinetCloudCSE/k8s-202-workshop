@@ -18,7 +18,7 @@ Attack logs and traffic logs are critical components of a comprehensive cybersec
 
 - Trend Analysis and Threat Intelligence: Over time, attack logs can reveal patterns and trends in security threats. This information can be used to enhance threat intelligence, improve security postures, and proactively defend against future attacks.
 
-Attack log in enabled by default on Fortiweb. To enable or diable attack log:
+Attack log in enabled by default on FortiWeb. To enable or diable attack log:
 
 1. Navigate to Log Settings: Look for the “Log & Report” menu, then find the "log config" > "Other log settings"
 
@@ -43,7 +43,7 @@ Overall, both attack logs and traffic logs serve as essential tools for maintain
 
 - To enable traffic log this has be done at policy level from the CLI.
 
-1. Click on CLI of fortiweb. 
+1. Click on CLI of FortiWeb. 
 
 ![cli](cli.png)
 

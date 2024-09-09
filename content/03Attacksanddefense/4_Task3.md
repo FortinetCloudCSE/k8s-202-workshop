@@ -5,9 +5,9 @@ weight: 30
 ---
 
 
-lets also explore URL rewriting with Fortiweb. Fortiweb supports several URL rewriting capabilities which can be very important and useful in production applications.
+Lets also explore URL rewriting with FortiWeb. FortiWeb supports several URL rewriting capabilities which can be very important and useful in production applications.
 
-key uses of URL rewriting on FortiWeb:
+Key uses of URL rewriting on FortiWeb:
 
 - SEO Optimization: Improves search engine rankings by transforming dynamic URLs into static, keyword-rich URLs that are easier for search engines to index.
 
@@ -22,11 +22,14 @@ key uses of URL rewriting on FortiWeb:
 - Consistent URL Structure: Ensures uniformity in URL formatting across the website, which aids in site maintenance and improves the overall user experience.
 
 
-##### Task1 - Rewriting Policy:
+#### Task1 - Rewriting Policy:
 
 Lets create a rewriting policy to rewrite from Service1 to Juiceshop application.
 
-1. on Fortiweb > Application Delivery > URL rewriting > URL rewriting policy.
+{{< tabs >}}
+{{% tab title="URL condition" %}}
+
+1. on FortiWeb > Application Delivery > URL rewriting > URL rewriting policy.
 
 Click create new.
 
@@ -43,7 +46,7 @@ Click create new.
 
 - **HTTP HOST**: your FQDN  
 
-(**FQDN can be found by running ```echo $fortiwebvmdnslabelport2``` in Azure shell.**)
+(**FQDN can be found by running ```echo $FortiWebvmdnslabelport2``` in Azure shell.**)
 
 ![juiceshop59](../images/httphost.png)
 
@@ -57,6 +60,8 @@ Finally it looks like below:
 
 ![juiceshop60](../images/urlcr.png)
 
+{{% /tab %}}
+{{% tab title="URL policy" %}}
 2. Lets create a URL rewriting policy by giving a name.
 
 - click create new and select the Rule we have create in previous step from the drop down. 
@@ -69,29 +74,36 @@ Finally it looks like below:
 
 ![juiceshop63](../images/finalpolicy.png)
 
+{{% /tab %}}
+{{% tab title="Web profile" %}}
 3. Now lets Navigate to Policy > Web protection profile > Edit the ingress tls profile, scroll down to URL rewriting and click on drop down to add the rewrite policy created in Step 2.
 
 ![juiceshop64](../images/rewriteprofile.png)
 
 - Click OK.
 
+{{% /tab %}}
+{{% tab title="Test" %}}
 4. Now when we input https://**<FQDN>**/info in the browser, it will now redirect to juiceshop application automatically. 
 
 
+{{% /tab %}}
+{{< /tabs >}}
+
 #### Task 2 - DOS protection/Rate limiting:
 
-1. To create a DOS rate limiting policy on Fortiweb > DOS protection > HTTP Access limit > Create new
+1. To create a DOS rate limiting policy on FortiWeb > DOS protection > HTTP Access limit > Create new
 
 2. Set the HTTP Request Limit/Sec on Standalone iP to 2, Action to Alert and Deny.
 
 ![juiceshop100](../images/dos.png)
 
-3. Create a DOS protection policy. on Fortiweb DOS Protection > DoS protection policy > Create new
+3. Create a DOS protection policy. on FortiWeb DOS Protection > DoS protection policy > Create new
 
 ![juiceshop101](../images/dosp.png)
 
 
-4. Give it a name, "enable HTTP DOS prevention:, selectt he HTTP Access limit policy create in Step 2. Click OK.
+4. Give it a name, "enable HTTP DOS prevention:, select he HTTP Access limit policy create in Step 2. Click OK.
 
 ![juiceshop103](../images/dosp2.png)
 
@@ -105,7 +117,7 @@ Finally it looks like below:
 cat << EOF | tee > dos.py
 import requests
 # Define the URL
-url = "https://$fortiwebvmdnslabelport2"
+url = "https://$FortiWebvmdnslabelport2"
 
 # Loop to run 100 GET requests
 for i in range(1, 101):
@@ -129,7 +141,7 @@ requests.exceptions.ConnectionError: ('Connection aborted.', RemoteDisconnected(
 EOF
 ```
 
-8. on Fortiweb atatck log we should see an entry for DOS protection attack in Log and Report > Log access > Attack.
+8. on FortiWeb atatck log we should see an entry for DOS protection attack in Log and Report > Log access > Attack.
 
 ![juiceshop110](../images/attack2.png)
 

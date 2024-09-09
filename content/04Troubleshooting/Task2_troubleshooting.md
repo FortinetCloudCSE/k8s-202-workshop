@@ -27,7 +27,7 @@ Under normal circumstances, you should see a new attack log entry in the attack 
 system dashboard.
 
 
-4. use TCPDUMP equivalent command on Fortiweb **diagnose network sniffer <interface> <filter> 4 0 -a**
+4. use TCPDUMP equivalent command on FortiWeb **diagnose network sniffer <interface> <filter> 4 0 -a**
 
 example: **diagnose network sniffer any "port 8443" 4 0  -a**
 
@@ -80,7 +80,7 @@ EOF
 
 1. From the cluster check the ingress controller pod logs in namepsace to see if there are any errors.
 
-```kubectl get pods -n fortiwebingress```
+```kubectl get pods -n FortiWebingress```
 
 output:
 
@@ -90,7 +90,7 @@ first-release-fwb-k8s-ctrl-59db65cddc-g4298   1/1     Running   0          2d15h
 EOF
 ```
 
-2. ```Kubectl logs first-release-fwb-k8s-ctrl-59db65cddc-g4298 -n fortiwebingress``` (Replace with your pod name and namespace)
+2. ```Kubectl logs first-release-fwb-k8s-ctrl-59db65cddc-g4298 -n FortiWebingress``` (Replace with your pod name and namespace)
 
 output:
 

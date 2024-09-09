@@ -42,13 +42,13 @@ These features collectively provide robust protection for web applications, ensu
 
 ### Lets create a protection profile to use for the TLS based ingress application.
 
-1. **Login to Fortiweb:**
+1. **Login to FortiWeb:**
 
 - run the following commands on azure shell:
 
 ```bash
-echo $fortiwebUsername
-echo $fortiwebPassword
+echo $FortiWebUsername
+echo $FortiWebPassword
 echo $vm_name
 ```
 
@@ -60,7 +60,7 @@ https://srijapx2.westus.cloudapp.azure.com
 
 - Login with username and password from above output. 
 
-2. On fortiweb > Policy > Web protection profile > click on "inline extended protection" and click clone at the top and give it a name: ```ingress tls profile```. This profile name will be used later in the Ingress definition file. 
+2. On FortiWeb > Policy > Web protection profile > click on "inline extended protection" and click clone at the top and give it a name: ```ingress tls profile```. This profile name will be used later in the Ingress definition file. 
 
 ![image1](../images/fwebprotection.png)
 
@@ -74,13 +74,13 @@ https://srijapx2.westus.cloudapp.azure.com
 
 ```bash
 location="eastus"
-fortiwebvmdnslabel="$(whoami)fortiwebvm7"
-echo $fortiwebvmdnslabel
-vm_name="$fortiwebvmdnslabel.$location.cloudapp.azure.com"
-fortiwebvmdnslabelport2="$(whoami)px2.$location.cloudapp.azure.com"
-echo $fortiwebvmdnslabelport2
+FortiWebvmdnslabel="$(whoami)FortiWebvm7"
+echo $FortiWebvmdnslabel
+vm_name="$FortiWebvmdnslabel.$location.cloudapp.azure.com"
+FortiWebvmdnslabelport2="$(whoami)px2.$location.cloudapp.azure.com"
+echo $FortiWebvmdnslabelport2
 openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 \
-    -subj "/C=US/ST=California/L=Sunnyvale/O=GlobalSecurity/OU=Dev/CN=$fortiwebvmdnslabelport2" \
+    -subj "/C=US/ST=California/L=Sunnyvale/O=GlobalSecurity/OU=Dev/CN=$FortiWebvmdnslabelport2" \
     -keyout cert.key  -out cert.crt
 ```
 You should see cert.crt, cert.key created.
@@ -89,9 +89,9 @@ You should see cert.crt, cert.key created.
 
 ```kubectl create secret tls tls-secret --cert=cert.crt --key=cert.key```
 
-7. We will tell fortiweb ingress controller use fortiweb port1 ip for API access, and create VIP on Fortiweb Port1 secondary IP, the VIP address is on same subnet with Port1 with last octet set to .100.
+7. We will tell FortiWeb ingress controller use FortiWeb port1 ip for API access, and create VIP on FortiWeb Port1 secondary IP, the VIP address is on same subnet with Port1 with last octet set to .100.
 
-use below script to get Fortiweb Port1 and Port1 Secondary IP address , then create yaml file with these IP address
+use below script to get FortiWeb Port1 and Port1 Secondary IP address , then create yaml file with these IP address
 
 ```bash
 echo vm_name=$vm_name
@@ -137,10 +137,10 @@ spec:
   ingressClassName: fwb-ingress-controller
   tls:
   - hosts: 
-     - $fortiwebvmdnslabelport2
+     - $FortiWebvmdnslabelport2
     secretName: tls-secret
   rules:
-  - host: $fortiwebvmdnslabelport2
+  - host: $FortiWebvmdnslabelport2
     http:
       paths:
       - path: /info
@@ -164,13 +164,13 @@ ingress.networking.k8s.io/m created
 EOF
 ```
 
-10. on fortiweb, there will be now a Server policy with Certificate, Web protection profile we created in Step1. 
+10. on FortiWeb, there will be now a Server policy with Certificate, Web protection profile we created in Step1. 
 
 ![image3](../images/fweb3.png)
 
 11. to verify the certificate, please run the belwo ommand in Azure shell. 
 
-```echo $fortiwebvmdnslabelport2```
+```echo $FortiWebvmdnslabelport2```
 
 output:
 

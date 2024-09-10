@@ -10,12 +10,12 @@ In this chapter, we are going to create a lab setup as illustrated in the networ
 FortiWeb can be configured with two ports: port1 for incoming traffic and port2 for proxy traffic to the backend application. This is called the twoarms mode here.
 
 **FortiWeb TwoLegs Mode**
-![FortiWeb with two ports](../images/FortiWebtwoarms.png)
+![FortiWeb with two ports](../images/fortiwebtwoarms.png)
 
 FortiWeb can also be configured with a single port, where port1 handles both incoming traffic and proxy traffic to the backend application. This is called the one-arm mode.
 
 **FortiWeb OneArm Mode**
-![FortiWeb with single port](../images/FortiWebonearm.png)
+![FortiWeb with single port](../images/fortiwebonearm.png)
 
 {{% notice note %}}
 In this workshop, please use **default onearm mode**. 

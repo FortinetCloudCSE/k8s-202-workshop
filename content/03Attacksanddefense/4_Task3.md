@@ -22,7 +22,7 @@ Key uses of URL rewriting on FortiWeb:
 - Consistent URL Structure: Ensures uniformity in URL formatting across the website, which aids in site maintenance and improves the overall user experience.
 
 
-#### Task1 - Rewriting Policy:
+#### Attack1 - Rewriting Policy:
 
 Lets create a rewriting policy to rewrite from Service1 to Juiceshop application.
 
@@ -90,28 +90,31 @@ Finally it looks like below:
 {{% /tab %}}
 {{< /tabs >}}
 
-#### Task 2 - DOS protection/Rate limiting:
+#### Attack 1 - DOS protection/Rate limiting:
 
+{{< tabs title="DoS rate limiting" >}}
+{{% tab title="Create" %}}
 1. To create a DOS rate limiting policy on FortiWeb > DOS protection > HTTP Access limit > Create new
-
-2. Set the HTTP Request Limit/Sec on Standalone iP to 2, Action to Alert and Deny.
+- Set the HTTP Request Limit/Sec on Standalone iP to 2, Action to Alert and Deny.
 
 ![juiceshop100](../images/dos.png)
+{{% /tab %}}
+{{% tab title="Protection Policy" %}}
 
-3. Create a DOS protection policy. on FortiWeb DOS Protection > DoS protection policy > Create new
-
+2. Create a DOS protection policy. on FortiWeb DOS Protection > DoS protection policy > Create new
+- Give it a name, "enable HTTP DOS prevention"
+- select the HTTP Access limit policy create in previous step. 
+- Click OK.
 ![juiceshop101](../images/dosp.png)
 
-
-4. Give it a name, "enable HTTP DOS prevention:, select he HTTP Access limit policy create in Step 2. Click OK.
-
 ![juiceshop103](../images/dosp2.png)
-
-5. Now lets go back to Web protection profile, edit the tls ingress profile and update the **DOS protection policy**
+{{% /tab %}}
+{{% tab title="Protection Profile" %}}
+3. Now lets go back to Web protection profile, edit the TLS ingress profile and update the **DOS protection policy** to the policy just created.
 
 ![juiceshop105](../images/dosprofile.png)
 
-6. copy the following code by replacing your FQDN on Azure cloudshell.
+4. Paste the following code into your **Azure Cloudshell**, which creates and executes a sumple python script to send 100 HTTP GET requests to your FortiWeb VM FQDN.
 
 ```bash
 cat << EOF | tee > dos.py
@@ -131,8 +134,7 @@ print("All 100 requests completed.")
 EOF
 python dos.py
 ```
-
-7. We should see an error as the code crashes. 
+- We should see an error as the code crashes. 
 
 output: 
 
@@ -140,8 +142,10 @@ output:
 requests.exceptions.ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))
 EOF
 ```
-
-8. on FortiWeb atatck log we should see an entry for DOS protection attack in Log and Report > Log access > Attack.
+{{% /tab %}}
+{{% tab title="FortiWeb Log" %}}
+5. Check FortiWeb's atatck log to see an entry for DOS protection attack in **Log and Report > Log access > Attack**.
 
 ![juiceshop110](../images/attack2.png)
-
+{{% /tab %}}
+{{< /tabs >}}

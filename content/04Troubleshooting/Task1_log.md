@@ -67,4 +67,4 @@ Overall, both attack logs and traffic logs serve as essential tools for maintain
    end
    ```
 
-3. To view Traffic logs: In the “Log & Report” menu > Log Access > Traffic. 
+3. To view Traffic logs: In the **“Log & Report” menu > Log Access > Traffic.** 

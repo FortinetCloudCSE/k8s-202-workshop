@@ -1,6 +1,6 @@
 ---
 title: "Finetuning"
-linkTitle: "finetuning"
+linkTitle: "Finetuning"
 chapter: false
 weight: 30
 ---
@@ -24,12 +24,10 @@ Offload SSL: Utilize SSL offloading to handle the SSL/TLS decryption process, re
 Manage Certificates: Keep your SSL/TLS certificates up to date and use strong cipher suites to ensure optimal security and performance.
 
 5. Configure Connection Settings
-
 Connection Pooling: Use connection pooling to manage and reuse connections effectively, reducing the overhead associated with establishing new connections.
 Timeout Settings: Adjust timeout settings appropriately to avoid unnecessary resource utilization, ensuring that idle or stuck sessions are cleared promptly.
 
 6. Scalability and High Availability
-
 Load Balancing: Deploy FortiWeb in a load-balanced environment to distribute traffic evenly across multiple instances, enhancing both performance and availability.
 High Availability Setup: Configure high availability (HA) for FortiWeb to ensure there is no single point of failure, improving the resilience of your web security infrastructure.
 
@@ -39,7 +37,6 @@ Configuration Audits: Periodically review and audit the configuration settings t
 
 
 8. Advanced Features and Fine-Tuning
-
 Threat Intelligence Integration: Integrate with FortiGuard services for updated threat intelligence, which helps in proactive defense mechanisms by adjusting policies based on the latest threat landscape.
 
 

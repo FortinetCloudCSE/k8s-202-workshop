@@ -571,10 +571,10 @@ ssh -o "StrictHostKeyChecking=no" azureuser@$vm_name  -i  ~/.ssh/$rsakeyname < s
 else 
 ssh -o "StrictHostKeyChecking=no" azureuser@$vm_name  -i  ~/.ssh/$rsakeyname < staticrouteconfigonearm.txt
 fi
+```
 {{% /tab %}}
 {{% tab title="Verify Fweb config" %}}
 
-```
 - **Verify the fortiweb Configuration**
 
 you can ssh into fortiweb to check configuration like static route etc., 

@@ -46,7 +46,7 @@ Click create new.
 
 - **HTTP HOST**: your FQDN  
 
-(**FQDN can be found by running ```echo $FortiWebvmdnslabelport2``` in Azure shell.**)
+(**FQDN can be found by running ```echo $fortiwebvmdnslabelport2``` in Azure shell.**)
 
 ![juiceshop59](../images/httphost.png)
 
@@ -120,7 +120,7 @@ Finally it looks like below:
 cat << EOF | tee > dos.py
 import requests
 # Define the URL
-url = "https://$FortiWebvmdnslabelport2"
+url = "https://$fortiwebvmdnslabelport2"
 
 # Loop to run 100 GET requests
 for i in range(1, 101):

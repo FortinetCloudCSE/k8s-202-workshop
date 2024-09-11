@@ -106,10 +106,10 @@ spec:
   ingressClassName: fwb-ingress-controller
   tls:
   - hosts: 
-     - $FortiWebvmdnslabelport2
+     - $fortiwebvmdnslabelport2
     secretName: tls-secret
   rules:
-  - host: $FortiWebvmdnslabelport2
+  - host: $fortiwebvmdnslabelport2
     http:
       paths:
       - path: /info

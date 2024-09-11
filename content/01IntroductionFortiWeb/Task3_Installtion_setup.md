@@ -1,5 +1,5 @@
 ---
-title: "Install and Setup fortiweb Ingress Controller"
+title: "Install and Setup FortiWeb Ingress Controller"
 linkTitle: "Installation and Setup"
 weight: 30
 ---
@@ -7,14 +7,14 @@ weight: 30
 #### Network Diagram
 In this chapter, we are going to create a lab setup as illustrated in the network diagram below.
 
-fortiweb can be configured with two ports: port1 for incoming traffic and port2 for proxy traffic to the backend application. This is called the twoarms mode here.
+FortiWeb can be configured with two ports: port1 for incoming traffic and port2 for proxy traffic to the backend application. This is called the twoarms mode here.
 
-**fortiweb TwoLegs Mode**
+**FortiWeb TwoLegs Mode**
 ![fortiweb with two ports](../images/fortiwebtwoarms.png)
 
-fortiweb can also be configured with a single port, where port1 handles both incoming traffic and proxy traffic to the backend application. This is called the one-arm mode.
+FortiWeb can also be configured with a single port, where port1 handles both incoming traffic and proxy traffic to the backend application. This is called the one-arm mode.
 
-**fortiweb OneArm Mode**
+**FortiWeb OneArm Mode**
 ![fortiweb with single port](../images/fortiwebonearm.png)
 
 {{% notice note %}}
@@ -356,7 +356,7 @@ Name                                                    ResourceGroup          L
 ------------------------------------------------------  ---------------------  ----------  ------------------------------------------  --------
 AKS-VNET                                                k8s51-k8s101-workshop  eastus      Microsoft.Network/virtualNetworks
 k8s51-aks-cluster                                       k8s51-k8s101-workshop  eastus      Microsoft.ContainerService/managedClusters
-fortiweb-VNET                                           k8s51-k8s101-workshop  eastus      Microsoft.Network/virtualNetworks
+FortiWeb-VNET                                           k8s51-k8s101-workshop  eastus      Microsoft.Network/virtualNetworks
 MyNSG                                                   k8s51-k8s101-workshop  eastus      Microsoft.Network/networkSecurityGroups
 FWBPublicIP                                             k8s51-k8s101-workshop  eastus      Microsoft.Network/publicIPAddresses
 NIC1                                                    k8s51-k8s101-workshop  eastus      Microsoft.Network/networkInterfaces
@@ -499,7 +499,7 @@ MyfortiwebVM # PING 10.224.0.4 (10.224.0.4): 56 data bytes
 
 #### 7. Config fortiweb VM 
 
-fortiweb requires some basic configuration to work with ingress Controller 
+FortiWeb requires some basic configuration to work with ingress Controller 
 config list:
 1. enable HTTPS API access on TCP port 443
 2. enable traffic log
@@ -853,7 +853,7 @@ service2   10.224.0.19:9876   6s
  #### 11. Create ingress rule with yaml file 
 
 
-fortiweb ingress controller is the default ingress controller, it will read and parse the ingress rule. the ingress controller will also read annotation from yaml file for some configuration parameters like fortiweb login ip and secrets etc., 
+FortiWeb ingress controller is the default ingress controller, it will read and parse the ingress rule. the ingress controller will also read annotation from yaml file for some configuration parameters like fortiweb login ip and secrets etc., 
 We will tell fortiweb ingress controller use fortiweb port1 ip for API access, and create VIP on fortiweb Port2, the VIP address is on same subnet with Port2 with last octet set to .100.
 
 Use the script below to get fortiweb Port1 and Port2 IP address , then create yaml file with these IP address
@@ -1137,7 +1137,7 @@ ipconfigSecondary  False      10.0.1.100          IPv4                       Sta
 {{< /tabs >}}
 
 Verify connectivity to fortiweb VIP
-fortiweb has VIP configured which it's an alias of NIC2 interface(in twoarms mode) or NIC1 (in onearm mode). from client pod, you shall able to ping it.
+FortiWeb has VIP configured which it's an alias of NIC2 interface(in twoarms mode) or NIC1 (in onearm mode). from client pod, you shall able to ping it.
 
 
 ```bash

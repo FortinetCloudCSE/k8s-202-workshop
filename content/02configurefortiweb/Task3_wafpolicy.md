@@ -47,8 +47,8 @@ These features collectively provide robust protection for web applications, ensu
 - run the following commands on azure shell:
 
 ```bash
-echo $FortiWebUsername
-echo $FortiWebPassword
+echo $fortiwebUsername
+echo $fortiwebPassword
 echo $vm_name
 ```
 
@@ -74,13 +74,13 @@ https://srijapx2.westus.cloudapp.azure.com
 
 ```bash
 location="eastus"
-FortiWebvmdnslabel="$(whoami)FortiWebvm7"
-echo $FortiWebvmdnslabel
-vm_name="$FortiWebvmdnslabel.$location.cloudapp.azure.com"
+FortiWebvmdnslabel="$(whoami)fortiwebvm7"
+echo $fortiwebvmdnslabel
+vm_name="$fortiwebvmdnslabel.$location.cloudapp.azure.com"
 FortiWebvmdnslabelport2="$(whoami)px2.$location.cloudapp.azure.com"
-echo $FortiWebvmdnslabelport2
+echo $fortiwebvmdnslabelport2
 openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 \
-    -subj "/C=US/ST=California/L=Sunnyvale/O=GlobalSecurity/OU=Dev/CN=$FortiWebvmdnslabelport2" \
+    -subj "/C=US/ST=California/L=Sunnyvale/O=GlobalSecurity/OU=Dev/CN=$fortiwebvmdnslabelport2" \
     -keyout cert.key  -out cert.crt
 ```
 You should see cert.crt, cert.key created.
@@ -137,10 +137,10 @@ spec:
   ingressClassName: fwb-ingress-controller
   tls:
   - hosts: 
-     - $FortiWebvmdnslabelport2
+     - $fortiwebvmdnslabelport2
     secretName: tls-secret
   rules:
-  - host: $FortiWebvmdnslabelport2
+  - host: $fortiwebvmdnslabelport2
     http:
       paths:
       - path: /info
@@ -170,7 +170,7 @@ EOF
 
 11. to verify the certificate, please run the belwo ommand in Azure shell. 
 
-```echo $FortiWebvmdnslabelport2```
+```echo $fortiwebvmdnslabelport2```
 
 output:
 

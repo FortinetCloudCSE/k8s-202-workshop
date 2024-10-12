@@ -321,8 +321,25 @@ az vm create \
 ```
 
 {{% /tab %}}
-{{% tab title="twoarms" style="warning" %}}
-you shall see output like this  if fortiweb in twoarms mode
+{{% tab title="output" style="info" %}}
+you shall see output like this  
+
+one-arm mode
+```
+{
+  "fqdns": "k8s52fortiwebvm7.eastus.cloudapp.azure.com",
+  "id": "/subscriptions/02b50049-c444-416f-a126-3e4c815501ac/resourceGroups/k8s52-k8s101-workshop/providers/Microsoft.Compute/virtualMachines/MyfortiwebVM",
+  "location": "eastus",
+  "macAddress": "60-45-BD-D6-B4-8C",
+  "powerState": "VM running",
+  "privateIpAddress": "10.0.1.4",
+  "publicIpAddress": "52.170.217.44",
+  "resourceGroup": "k8s52-k8s101-workshop",
+  "zones": ""
+}
+```
+
+or if in two-arm mode
 
 ```
 {

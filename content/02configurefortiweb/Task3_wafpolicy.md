@@ -77,7 +77,7 @@ location="eastus"
 FortiWebvmdnslabel="$(whoami)fortiwebvm7"
 echo $fortiwebvmdnslabel
 vm_name="$fortiwebvmdnslabel.$location.cloudapp.azure.com"
-FortiWebvmdnslabelport2="$(whoami)px2.$location.cloudapp.azure.com"
+fortiWebvmdnslabelport2="$(whoami)px2.$location.cloudapp.azure.com"
 echo $fortiwebvmdnslabelport2
 openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 \
     -subj "/C=US/ST=California/L=Sunnyvale/O=GlobalSecurity/OU=Dev/CN=$fortiwebvmdnslabelport2" \

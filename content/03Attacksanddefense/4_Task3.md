@@ -117,31 +117,38 @@ Finally it looks like below:
 4. Paste the following code into your **Azure Cloudshell**, which creates and executes a sumple python script to send 100 HTTP GET requests to your FortiWeb VM FQDN.
 
 ```bash
-cat << EOF | tee > dos.py
-import requests
-# Define the URL
-url = "https://$fortiwebvmdnslabelport2"
+export fortiwebvmdnslabelport2=$fortiwebvmdnslabelport2
+export location=$location
+url="https://${fortiwebvmdnslabelport2}"
+echo "Sending requests to: $url"
 
 # Loop to run 100 GET requests
-for i in range(1, 101):
-    # Make the GET request
-    response = requests.get(url,verify=False)
-    # Print the output
-    print(f"Request {i} output:")
-    print(response)
+for i in {1..100}
+do
+    # Make the GET request and capture the output
+    output=$(curl -s -k -w "\nHTTP Status: %{http_code}" "$url")
+    
+    # Check if curl command was successful
+    if [ $? -eq 0 ]; then
+        # Print the output
+        echo "Request $i output:"
+        echo "$output"
+        echo "------------------------"
+    else
+        echo "Request $i failed"
+    fi
+    
+    # Add a small delay between requests
+    sleep 0.1
+done
 
-print("All 100 requests completed.")
-EOF
-python dos.py
+echo "All 100 requests completed."
 ```
-- We should see an error as the code crashes. 
 
 output: 
 
-```bash
-requests.exceptions.ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))
-EOF
-```
+We will see first few request suceeded , then later request failed due to server blocked it. 
+
 {{% /tab %}}
 {{% tab title="FortiWeb Log" %}}
 5. Check FortiWeb's atatck log to see an entry for DOS protection attack in **Log and Report > Log access > Attack**.

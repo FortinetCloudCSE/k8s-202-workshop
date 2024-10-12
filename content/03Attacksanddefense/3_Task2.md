@@ -91,9 +91,10 @@ We will see block page again but find out from the attack log what attack this i
 
 1. What attack was triggered in step 6?
 {{% expand title="Click for Answer..." %}}
-    The Answer IS...
+    SQLi
 {{% /expand %}}
 2. How are signatures helping to block these OWASP TOP 10 attacks?
 {{% expand title="Click for Answer..." %}}
-    The Answer IS...
+    Signatures detect patterns of malicious SQL statements, command injection attempts, and other injection payloads.
+Example: Detecting 'UNION SELECT' or 'exec xp_' in requests.
 {{% /expand %}}

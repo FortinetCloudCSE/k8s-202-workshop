@@ -23,7 +23,7 @@ uglyURLs = true     # true -> basic/index.html -> basic.html
 # use this theme ;-)
 theme = ["hugo-theme-relearn"]
 
-title = "K8s 202 Workshop"
+title = "K8s 202 FortiWeb Ingress Security"
 
 # We disable this for testing the exampleSite; you must do so too
 # if you want to use the themes parameter disableGeneratorVersion=true;
@@ -63,8 +63,8 @@ enableEmoji = true
     # - set the following `style` to a predefined style name
     # - remove the `@import` of the self-defined chroma stylesheet from your CSS files
     #   (here eg.: theme-relearn-light.css / theme-relearn-dark.css)
-    noClasses = false
-    style = "native"
+    noClasses = true
+    style = "catppuccin-latte"
 
   [markup.goldmark.renderer]
     # activated for this showcase to use HTML and JavaScript; decide on your own needs;
@@ -84,11 +84,11 @@ enableEmoji = true
   #Optional, By Default, the logo banner will match the Text from themeVariant Above
   # If you would like to change the primary logo banner text, uncommenet logoBannerText Parameter and set to desired text.
   
-  logoBannerText = "K8s 202 Workshop"
+  logoBannerText = "K8s 202"
   
   # Optional: If you'd like additional logo sub text/descriptions, use logoBannerSubText Parameter.  leave empty string to omit: ""
   
-  logoBannerSubText = "FortiWeb"
+  logoBannerSubText = "FortiWeb Ingress"
   
 
   # Shows a checkmark for visited pages on the menu
@@ -188,21 +188,26 @@ enableEmoji = true
 
 
 [[menu.shortcuts]]
-name = "<i class='fas fa-tools-cap'></i> K8s 101 workshop"
+name = "<i class='fas fa-graduation-cap'></i> K8s 101 workshop"
 url = "https://fortinetcloudcse.github.io/k8s-101-workshop/"
 weight = 10
 
 [[menu.shortcuts]]
-name = "<i class='fas fa-tools-cap'></i> Kubernetes Admin Guide"
+name = "<i class='fas fa-graduation-cap'></i> K8s 201 workshop"
+url = "https://fortinetcloudcse.github.io/k8s-201-workshop/"
+weight = 11
+
+[[menu.shortcuts]]
+name = "<i class='fas fa-tools'></i> Kubernetes Admin Guide"
 url = "https://kubernetes.io/docs/concepts/"
 weight = 20
 
 [[menu.shortcuts]]
-name = "<i class='fas fa-tools-cap'></i> Kubectl reference"
+name = "<i class='fas fa-tools'></i> Kubectl reference"
 url = "https://kubernetes.io/docs/reference/kubectl/quick-reference/"
 weight = 30
 
 [[menu.shortcuts]]
-name = "<i class='fas fa-tools-cap'></i> Container FortiOS"
+name = "<i class='fas fa-tools'></i> Container FortiOS"
 url = "https://docs.fortinet.com/product/container-fortios/7.2"
 weight = 40

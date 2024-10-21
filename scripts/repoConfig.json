@@ -1,35 +1,41 @@
 {
   "repoName":"k8s-202-workshop",
   "author":"Srija Reddy Allam",
-  "workshopTitle":"K8s 202 Workshop",
+  "workshopTitle":"K8s 202 FortiWeb Ingress Security",
   "themeVariant":"Xperts2024",
-  "logoBannerText":"K8s 202 Workshop",
-  "logoBannerSubText":"FortiWeb Cloud",
+  "logoBannerText":"K8s 202",
+  "logoBannerSubText":"FortiWeb Ingress",
   "errorLevel":"warning",
   "googleServicesID":"G-5RZBH288ST",
   "shortcuts": [
   {
     "text": "K8s 101 workshop",
     "URL": "https://fortinetcloudcse.github.io/k8s-101-workshop/",
-    "icon": "fa-tools-cap",
+    "icon": "fa-graduation-cap",
     "weight":10
+  },
+  {
+    "text": "K8s 201 workshop",
+    "URL": "https://fortinetcloudcse.github.io/k8s-201-workshop/",
+    "icon": "fa-graduation-cap",
+    "weight":11
   },
   {
     "text": "Kubernetes Admin Guide",
     "URL": "https://kubernetes.io/docs/concepts/",
-    "icon": "fa-tools-cap",
+    "icon": "fa-tools",
     "weight":20
   },
   {
     "text": "Kubectl reference",
     "URL": "https://kubernetes.io/docs/reference/kubectl/quick-reference/",
-    "icon": "fa-tools-cap",
+    "icon": "fa-tools",
     "weight":30
   },
   {
     "text": "Container FortiOS",
     "URL": "https://docs.fortinet.com/product/container-fortios/7.2",
-    "icon": "fa-tools-cap",
+    "icon": "fa-tools",
     "weight":40
   }
   ]

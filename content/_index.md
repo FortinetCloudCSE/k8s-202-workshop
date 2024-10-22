@@ -5,7 +5,7 @@ archetype: home
 description : "Fortinet K8S 202 Workshop"
 ---
 
-{{< Xperts24Banner line1="K8s 202:" line2="Container FortiOS (cFOS)" line3="FortiWeb Ingress Security" >}}
+{{< Xperts24Banner line1="K8s 202:" line2="FortiWeb Ingress Security for K8s" line3="Deployment Scenarios" >}}
 
 ### Welcome to K8s 202 Workshop
 

@@ -27,5 +27,3 @@ When provisioning is complete, one of the following will happen.
 Tasks
 
 * Setup Azure Cloud Shell
-* Get Kubernetes Ready
-* Get Familiar with cFOS
